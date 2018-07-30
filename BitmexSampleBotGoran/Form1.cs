@@ -39,6 +39,18 @@ namespace BitmexSampleBotGoran
         List<Position> OpenPositions = new List<Position>();
         List<Order> OpenOrders = new List<Order>();
 
+        // Bolinger Bands BB
+        int BBLength = 20;
+        double BBMultiplier = 2;
+
+        // EMA 
+        int EMA1Period = 26; // Slow MACD EMA
+        int EMA2Period = 12; // Fast MACD EMA
+        int EMA3Period = 9;
+
+        // For MACD
+        int MACDEMAPeriod = 9;  // MACD smoothing period
+
         //WebSocket ws;
         //Dictionary<string, decimal> Prices = new Dictionary<string, decimal>();
 
@@ -255,7 +267,9 @@ namespace BitmexSampleBotGoran
         private void UpdateCandles ()
         {
             // Get Candles
-            Candles = bitmex.GetCandleHistory(ActiveInstrument.Symbol, 100, ddlCandleTimes.SelectedItem.ToString());
+            Candles = bitmex.GetCandleHistory(ActiveInstrument.Symbol, 500, ddlCandleTimes.SelectedItem.ToString());
+
+            Candles = Candles.OrderBy(a => a.TimeStamp).ToList();
 
             //  Set indicator info
             foreach (Candle c in Candles)
@@ -265,20 +279,113 @@ namespace BitmexSampleBotGoran
                 int MA1Period = Convert.ToInt32(nudMA1.Value);
                 int MA2Period = Convert.ToInt32(nudMA2.Value);
 
-                if (c.PCC > MA1Period)
+                if (c.PCC >= MA1Period)
                 {
                     // Get the moving average over the last x periods using closing ** Includes current candle **
                     c.MA1 = Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(MA1Period).Average(a => a.Close);
                     // With not enough candles, we don't set to 0, we leave it null
                 }
 
-                if (c.PCC > MA2Period)
+                if (c.PCC >= MA2Period)
                 {
                     // Get the moving average over the last x periods using closing ** Includes current candle **
                     c.MA2 = Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(MA2Period).Average(a => a.Close);
                     // With not enough candles, we don't set to 0, we leave it null
                 }
+
+                if (c.PCC >= BBLength)
+                {
+                    // BBMiddle is just a 20 period moving average
+                    c.BBMiddle = Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(BBLength).Average(a => a.Close);
+
+                    // Calcualting Standard Deviation
+                    double total_squared = 0;
+                    double total_for_average = Convert.ToDouble(Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(BBLength).Sum(a => a.Close));
+                    foreach (Candle cb in Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(BBLength).ToList())
+                    {
+                        total_squared += Math.Pow(Convert.ToDouble(cb.Close), 2);
+                    }
+                    double stdev = Math.Sqrt((total_squared - (Math.Pow(total_for_average, 2) / BBLength)) / BBLength);
+                    c.BBUpper = c.BBMiddle + (stdev * BBMultiplier);
+                    c.BBLower = c.BBMiddle - (stdev * BBMultiplier);
+                }
+
+                if (c.PCC >= EMA1Period)
+                {
+                    double p1 = EMA1Period + 1;
+                    double EMAMultiplier = Convert.ToDouble(2 / p1);
+
+                    if (c.PCC == EMA1Period)
+                    {
+                        // This is our seed EMA, using SMA of EMA1 period for EMA 1
+                        c.EMA1 = Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(EMA1Period).Average(a => a.Close);
+                    }
+                    else
+                    {
+                        double? LastEMA = Candles.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().EMA1;
+                        c.EMA1 = ((c.Close - LastEMA) * EMAMultiplier) + LastEMA;
+                    }
+                }
+
+                if (c.PCC >= EMA2Period)
+                {
+                    double p1 = EMA2Period + 1;
+                    double EMAMultiplier = Convert.ToDouble(2 / p1);
+
+                    if (c.PCC == EMA2Period)
+                    {
+                        // This is our seed EMA, using SMA
+                        c.EMA2 = Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(EMA2Period).Average(a => a.Close);
+                    }
+                    else
+                    {
+                        double? LastEMA = Candles.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().EMA2;
+                        c.EMA2 = ((c.Close - LastEMA) * EMAMultiplier) + LastEMA;
+                    }
+                }
+
+                if (c.PCC >= EMA3Period)
+                {
+                    double p1 = EMA3Period + 1;
+                    double EMAMultiplier = Convert.ToDouble(2 / p1);
+
+                    if (c.PCC == EMA3Period)
+                    {
+                        // This is our seed EMA, using SMA
+                        c.EMA3 = Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(EMA3Period).Average(a => a.Close);
+                    }
+                    else
+                    {
+                        double? LastEMA = Candles.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().EMA3;
+                        c.EMA3 = ((c.Close - LastEMA) * EMAMultiplier) + LastEMA;
+                    }
+                }
+
+                // MACD
+                // We can only do this if we have the longest EMA period, EMA1
+                if (c.PCC >= EMA1Period)
+                {
+
+                    double p1 = MACDEMAPeriod + 1;
+                    double MACDEMAMultiplier = Convert.ToDouble(2 / p1);
+
+                    c.MACDLine = (c.EMA2 - c.EMA1); // default is 12EMA - 26EMA
+                    if (c.PCC == EMA1Period + MACDEMAPeriod)
+                    {
+                        // Set this to SMA of MACDLine to seed it
+                        c.MACDSignalLine = Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(MACDEMAPeriod).Average(a => (a.MACDLine));
+                    }
+                    else if (c.PCC > EMA1Period + MACDEMAPeriod)
+                    {
+                        // We can calculate this EMA based off past candle EMAs
+                        double? LastMACDSignalLine = Candles.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().MACDSignalLine;
+                        c.MACDSignalLine = ((c.MACDLine - LastMACDSignalLine) * MACDEMAMultiplier) + LastMACDSignalLine;
+                    }
+                    c.MACDHistorgram = c.MACDLine - c.MACDSignalLine;
+                }
             }
+
+            Candles = Candles.OrderByDescending(a => a.TimeStamp).ToList();
 
             // Show Candles
             dgvCandles.DataSource = Candles;
@@ -298,26 +405,49 @@ namespace BitmexSampleBotGoran
             // This is where we determine what mode bot is in
             if(rdoBuy.Checked)
             {
-                if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
+                //if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
+                //{
+                //    // Did the last full candle have MA1 cross above MA2?  We'll need to buy now
+                //    Mode = "Buy";
+                //}
+                //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 >= Candles[2].MA2))
+                //{
+                //    // Did the last full candle have MA1 cross below MA2?  We'll need to close any open position.
+                //    Mode = "CloseAndWait";
+                //}
+                //else if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 > Candles[2].MA2))
+                //{
+                //    // If no crossover, is MA1 still above MA2?  We'll need to leave our position open.
+                //    Mode = "Wait";
+                //}
+                //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 < Candles[2].MA2))
+                //{
+                //    // If no crossover, is MA1 still below MA2?  We'll need to make sure we don't have a position open.
+                //    Mode = "CloseAndWait";
+                //}
+
+                // MACD Example
+                if ((Candles[1].MACDLine > Candles[1].MACDSignalLine) && (Candles[2].MACDLine <= Candles[2].MACDSignalLine)) // Most recently closed candle crossed over up
                 {
-                    // Did the last full candle have MA1 cross above MA2?  We'll need to buy now
+                    // Did the last full candle have MACDLine cross above MACDSignalLine?  We'll need to buy now.
                     Mode = "Buy";
                 }
-                else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 >= Candles[2].MA2))
+                else if ((Candles[1].MACDLine < Candles[1].MACDSignalLine) && (Candles[2].MACDLine >= Candles[2].MACDSignalLine))
                 {
-                    // Did the last full candle have MA1 cross below MA2?  We'll need to close any open position.
+                    // Did the last full candle have MACDLine cross below MACDSignalLine?  We'll need to close any open position.
                     Mode = "CloseAndWait";
                 }
-                else if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 > Candles[2].MA2))
+                else if ((Candles[1].MACDLine > Candles[1].MACDSignalLine) && (Candles[2].MACDLine > Candles[2].MACDSignalLine))
                 {
-                    // If no crossover, is MA1 still above MA2?  We'll need to leave our position open.
+                    // If no crossover, is MACDLine still above MACDSignalLine? We'll need to leave our position open.
                     Mode = "Wait";
                 }
-                else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 < Candles[2].MA2))
+                else if ((Candles[1].MACDLine < Candles[1].MACDSignalLine) && (Candles[2].MACDLine < Candles[2].MACDSignalLine))
                 {
-                    // If no crossover, is MA1 still below MA2?  We'll need to make sure we don't have a position open.
+                    // If no crossover, is MACDLine still below MACDSignalLine? We'll need to make sure we don't have a position open.
                     Mode = "CloseAndWait";
                 }
+
             }
             else if(rdoSell.Checked)
             {
@@ -435,7 +565,7 @@ namespace BitmexSampleBotGoran
                                 // If we have an open order, edit it
                                 if (OpenOrders.Any(a => a.Side == "Sell"))
                                 {
-                                    // We still have an open buy order, cancel that order, make a new buy order
+                                    // We still have an open sell order, cancel that order, make a new buy order
                                     string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
                                     AutoMakeOrder("Buy", Convert.ToInt32(OpenPositions[0].CurrentQty));
                                 }
@@ -453,7 +583,7 @@ namespace BitmexSampleBotGoran
                                 // If we have an open order, edit it
                                 if (OpenOrders.Any(a => a.Side == "Sell"))
                                 {
-                                    // We still have an open order, cancel that order, make a new buy order
+                                    // We still have an open sell order, cancel that order, make a new buy order
                                     string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
                                     AutoMakeOrder("Buy", Convert.ToInt32(OpenPositions[0].CurrentQty));
                                 }

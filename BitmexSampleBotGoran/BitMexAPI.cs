@@ -326,6 +326,16 @@ namespace BitMEX
         public int PCC { get; set; }  // Previous Candle Count
         public double? MA1 { get; set; }
         public double? MA2 { get; set; }
+        public double? BBUpper { get; set; }
+        public double? BBMiddle { get; set; }
+        public double? BBLower { get; set; }
+        public double? EMA1 { get; set; }
+        public double? EMA2 { get; set; }
+        public double? EMA3 { get; set; }
+        public double? MACDLine { get; set; }
+        public double? MACDSignalLine { get; set; }
+        public double? MACDHistorgram { get; set; }
+
     }
 
     public class Position

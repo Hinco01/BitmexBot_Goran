@@ -216,7 +216,7 @@
             this.groupBox1.Controls.Add(this.ddlCandleTimes);
             this.groupBox1.Location = new System.Drawing.Point(12, 191);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1087, 223);
+            this.groupBox1.Size = new System.Drawing.Size(1356, 223);
             this.groupBox1.TabIndex = 11;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Candles";
@@ -291,10 +291,12 @@
             this.dgvCandles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvCandles.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.ColumnHeader;
             this.dgvCandles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvCandles.Location = new System.Drawing.Point(7, 48);
             this.dgvCandles.Name = "dgvCandles";
-            this.dgvCandles.Size = new System.Drawing.Size(1074, 175);
+            this.dgvCandles.RowHeadersWidth = 4;
+            this.dgvCandles.Size = new System.Drawing.Size(1343, 175);
             this.dgvCandles.TabIndex = 3;
             // 
             // ddlCandleTimes
@@ -470,7 +472,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1111, 426);
+            this.ClientSize = new System.Drawing.Size(1380, 426);
             this.Controls.Add(this.nudCurrentPrice);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.groupBox2);

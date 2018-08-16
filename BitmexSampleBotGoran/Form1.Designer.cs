@@ -50,6 +50,7 @@
             this.ddlCandleTimes = new System.Windows.Forms.ComboBox();
             this.tmrCandleUpdater = new System.Windows.Forms.Timer(this.components);
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.lblSettingsWebsocketInfo = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.ddlAutoOrderType = new System.Windows.Forms.ComboBox();
@@ -62,6 +63,16 @@
             this.tmrAutotradeExecution = new System.Windows.Forms.Timer(this.components);
             this.nudCurrentPrice = new System.Windows.Forms.NumericUpDown();
             this.tmrClientUpdates = new System.Windows.Forms.Timer(this.components);
+            this.Heartbeat = new System.Windows.Forms.Timer(this.components);
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.lblBalanceAndTime = new System.Windows.Forms.Label();
+            this.chkOverloadRetry = new System.Windows.Forms.CheckBox();
+            this.nudOverloadRetryAttempts = new System.Windows.Forms.NumericUpDown();
+            this.lblOverloadRetryAttempts = new System.Windows.Forms.Label();
+            this.nudPercentEarn = new System.Windows.Forms.NumericUpDown();
+            this.lblPrcEarn = new System.Windows.Forms.Label();
+            this.nudPercentToTrade = new System.Windows.Forms.NumericUpDown();
+            this.label9 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nupQty)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA2)).BeginInit();
@@ -70,12 +81,16 @@
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudAutoQuantity)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCurrentPrice)).BeginInit();
+            this.groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverloadRetryAttempts)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPercentEarn)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPercentToTrade)).BeginInit();
             this.SuspendLayout();
             // 
             // btnBuy
             // 
             this.btnBuy.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.btnBuy.Location = new System.Drawing.Point(12, 131);
+            this.btnBuy.Location = new System.Drawing.Point(12, 115);
             this.btnBuy.Name = "btnBuy";
             this.btnBuy.Size = new System.Drawing.Size(75, 23);
             this.btnBuy.TabIndex = 0;
@@ -86,7 +101,7 @@
             // btnSell
             // 
             this.btnSell.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-            this.btnSell.Location = new System.Drawing.Point(379, 131);
+            this.btnSell.Location = new System.Drawing.Point(379, 115);
             this.btnSell.Name = "btnSell";
             this.btnSell.Size = new System.Drawing.Size(75, 23);
             this.btnSell.TabIndex = 1;
@@ -96,6 +111,7 @@
             // 
             // nupQty
             // 
+            this.nupQty.Enabled = false;
             this.nupQty.Location = new System.Drawing.Point(169, 131);
             this.nupQty.Maximum = new decimal(new int[] {
             100000,
@@ -168,6 +184,7 @@
             // ddlSymbol
             // 
             this.ddlSymbol.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ddlSymbol.Enabled = false;
             this.ddlSymbol.FormattingEnabled = true;
             this.ddlSymbol.Location = new System.Drawing.Point(169, 48);
             this.ddlSymbol.Name = "ddlSymbol";
@@ -207,6 +224,7 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.lblSettingsWebsocketInfo);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.nudMA2);
@@ -216,7 +234,7 @@
             this.groupBox1.Controls.Add(this.ddlCandleTimes);
             this.groupBox1.Location = new System.Drawing.Point(12, 191);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1356, 223);
+            this.groupBox1.Size = new System.Drawing.Size(1398, 236);
             this.groupBox1.TabIndex = 11;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Candles";
@@ -291,12 +309,12 @@
             this.dgvCandles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvCandles.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.ColumnHeader;
+            this.dgvCandles.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.DisplayedCells;
             this.dgvCandles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvCandles.Location = new System.Drawing.Point(7, 48);
             this.dgvCandles.Name = "dgvCandles";
             this.dgvCandles.RowHeadersWidth = 4;
-            this.dgvCandles.Size = new System.Drawing.Size(1343, 175);
+            this.dgvCandles.Size = new System.Drawing.Size(1385, 188);
             this.dgvCandles.TabIndex = 3;
             // 
             // ddlCandleTimes
@@ -321,6 +339,10 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label9);
+            this.groupBox2.Controls.Add(this.nudPercentToTrade);
+            this.groupBox2.Controls.Add(this.lblPrcEarn);
+            this.groupBox2.Controls.Add(this.nudPercentEarn);
             this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.label6);
             this.groupBox2.Controls.Add(this.ddlAutoOrderType);
@@ -329,17 +351,26 @@
             this.groupBox2.Controls.Add(this.rdoSell);
             this.groupBox2.Controls.Add(this.rdoBuy);
             this.groupBox2.Controls.Add(this.btnAutomatedTrading);
-            this.groupBox2.Location = new System.Drawing.Point(648, 32);
+            this.groupBox2.Location = new System.Drawing.Point(648, 85);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(450, 159);
+            this.groupBox2.Size = new System.Drawing.Size(450, 106);
             this.groupBox2.TabIndex = 12;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Automated Trading";
             // 
+            // lblSettingsWebsocketInfo
+            // 
+            this.lblSettingsWebsocketInfo.AutoSize = true;
+            this.lblSettingsWebsocketInfo.Location = new System.Drawing.Point(576, 21);
+            this.lblSettingsWebsocketInfo.Name = "lblSettingsWebsocketInfo";
+            this.lblSettingsWebsocketInfo.Size = new System.Drawing.Size(89, 13);
+            this.lblSettingsWebsocketInfo.TabIndex = 6;
+            this.lblSettingsWebsocketInfo.Text = "Websocket Info: ";
+            // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(321, 86);
+            this.label7.Location = new System.Drawing.Point(321, 66);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(99, 13);
             this.label7.TabIndex = 14;
@@ -361,16 +392,17 @@
             this.ddlAutoOrderType.Items.AddRange(new object[] {
             "Market",
             "Limit Post Only"});
-            this.ddlAutoOrderType.Location = new System.Drawing.Point(324, 33);
+            this.ddlAutoOrderType.Location = new System.Drawing.Point(324, 32);
             this.ddlAutoOrderType.Name = "ddlAutoOrderType";
             this.ddlAutoOrderType.Size = new System.Drawing.Size(121, 21);
             this.ddlAutoOrderType.TabIndex = 5;
             // 
             // nudAutoQuantity
             // 
-            this.nudAutoQuantity.Location = new System.Drawing.Point(324, 102);
+            this.nudAutoQuantity.Enabled = false;
+            this.nudAutoQuantity.Location = new System.Drawing.Point(324, 82);
             this.nudAutoQuantity.Maximum = new decimal(new int[] {
-            10000,
+            1000000000,
             0,
             0,
             0});
@@ -378,7 +410,7 @@
             this.nudAutoQuantity.Size = new System.Drawing.Size(120, 20);
             this.nudAutoQuantity.TabIndex = 4;
             this.nudAutoQuantity.Value = new decimal(new int[] {
-            1,
+            500,
             0,
             0,
             0});
@@ -396,7 +428,7 @@
             // rdoSell
             // 
             this.rdoSell.AutoSize = true;
-            this.rdoSell.Location = new System.Drawing.Point(125, 48);
+            this.rdoSell.Location = new System.Drawing.Point(125, 46);
             this.rdoSell.Name = "rdoSell";
             this.rdoSell.Size = new System.Drawing.Size(42, 17);
             this.rdoSell.TabIndex = 2;
@@ -407,7 +439,7 @@
             // 
             this.rdoBuy.AutoSize = true;
             this.rdoBuy.Checked = true;
-            this.rdoBuy.Location = new System.Drawing.Point(125, 19);
+            this.rdoBuy.Location = new System.Drawing.Point(125, 14);
             this.rdoBuy.Name = "rdoBuy";
             this.rdoBuy.Size = new System.Drawing.Size(43, 17);
             this.rdoBuy.TabIndex = 1;
@@ -442,7 +474,13 @@
             // 
             // nudCurrentPrice
             // 
+            this.nudCurrentPrice.DecimalPlaces = 1;
             this.nudCurrentPrice.Enabled = false;
+            this.nudCurrentPrice.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
             this.nudCurrentPrice.Location = new System.Drawing.Point(170, 75);
             this.nudCurrentPrice.Maximum = new decimal(new int[] {
             100000,
@@ -450,10 +488,10 @@
             0,
             0});
             this.nudCurrentPrice.Minimum = new decimal(new int[] {
-            1,
+            5,
             0,
             0,
-            0});
+            65536});
             this.nudCurrentPrice.Name = "nudCurrentPrice";
             this.nudCurrentPrice.Size = new System.Drawing.Size(120, 20);
             this.nudCurrentPrice.TabIndex = 16;
@@ -468,11 +506,148 @@
             this.tmrClientUpdates.Enabled = true;
             this.tmrClientUpdates.Tick += new System.EventHandler(this.tmrClientUpdates_Tick);
             // 
+            // Heartbeat
+            // 
+            this.Heartbeat.Interval = 1000;
+            this.Heartbeat.Tick += new System.EventHandler(this.Heartbeat_Tick);
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.lblBalanceAndTime);
+            this.groupBox3.Location = new System.Drawing.Point(1104, 85);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(299, 105);
+            this.groupBox3.TabIndex = 17;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "User Information";
+            // 
+            // lblBalanceAndTime
+            // 
+            this.lblBalanceAndTime.AutoSize = true;
+            this.lblBalanceAndTime.Location = new System.Drawing.Point(6, 16);
+            this.lblBalanceAndTime.Name = "lblBalanceAndTime";
+            this.lblBalanceAndTime.Size = new System.Drawing.Size(47, 13);
+            this.lblBalanceAndTime.TabIndex = 18;
+            this.lblBalanceAndTime.Text = "Network";
+            // 
+            // chkOverloadRetry
+            // 
+            this.chkOverloadRetry.AutoSize = true;
+            this.chkOverloadRetry.Checked = true;
+            this.chkOverloadRetry.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkOverloadRetry.Location = new System.Drawing.Point(509, 119);
+            this.chkOverloadRetry.Name = "chkOverloadRetry";
+            this.chkOverloadRetry.Size = new System.Drawing.Size(97, 17);
+            this.chkOverloadRetry.TabIndex = 18;
+            this.chkOverloadRetry.Text = "Overload Retry";
+            this.chkOverloadRetry.UseVisualStyleBackColor = true;
+            this.chkOverloadRetry.CheckedChanged += new System.EventHandler(this.chkOverloadRetry_CheckedChanged);
+            // 
+            // nudOverloadRetryAttempts
+            // 
+            this.nudOverloadRetryAttempts.Location = new System.Drawing.Point(509, 165);
+            this.nudOverloadRetryAttempts.Maximum = new decimal(new int[] {
+            20,
+            0,
+            0,
+            0});
+            this.nudOverloadRetryAttempts.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudOverloadRetryAttempts.Name = "nudOverloadRetryAttempts";
+            this.nudOverloadRetryAttempts.Size = new System.Drawing.Size(120, 20);
+            this.nudOverloadRetryAttempts.TabIndex = 19;
+            this.nudOverloadRetryAttempts.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.nudOverloadRetryAttempts.ValueChanged += new System.EventHandler(this.nudOverloadRetryAttempts_ValueChanged);
+            // 
+            // lblOverloadRetryAttempts
+            // 
+            this.lblOverloadRetryAttempts.AutoSize = true;
+            this.lblOverloadRetryAttempts.Location = new System.Drawing.Point(506, 149);
+            this.lblOverloadRetryAttempts.Name = "lblOverloadRetryAttempts";
+            this.lblOverloadRetryAttempts.Size = new System.Drawing.Size(122, 13);
+            this.lblOverloadRetryAttempts.TabIndex = 20;
+            this.lblOverloadRetryAttempts.Text = "Overload Retry Attempts";
+            // 
+            // nudPercentEarn
+            // 
+            this.nudPercentEarn.DecimalPlaces = 2;
+            this.nudPercentEarn.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.nudPercentEarn.Location = new System.Drawing.Point(189, 33);
+            this.nudPercentEarn.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nudPercentEarn.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.nudPercentEarn.Name = "nudPercentEarn";
+            this.nudPercentEarn.Size = new System.Drawing.Size(60, 20);
+            this.nudPercentEarn.TabIndex = 21;
+            this.nudPercentEarn.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            // 
+            // lblPrcEarn
+            // 
+            this.lblPrcEarn.AutoSize = true;
+            this.lblPrcEarn.Location = new System.Drawing.Point(186, 14);
+            this.lblPrcEarn.Name = "lblPrcEarn";
+            this.lblPrcEarn.Size = new System.Drawing.Size(51, 13);
+            this.lblPrcEarn.TabIndex = 22;
+            this.lblPrcEarn.Text = "% to earn";
+            // 
+            // nudPercentToTrade
+            // 
+            this.nudPercentToTrade.Location = new System.Drawing.Point(189, 82);
+            this.nudPercentToTrade.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudPercentToTrade.Name = "nudPercentToTrade";
+            this.nudPercentToTrade.Size = new System.Drawing.Size(60, 20);
+            this.nudPercentToTrade.TabIndex = 23;
+            this.nudPercentToTrade.Value = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.nudPercentToTrade.ValueChanged += new System.EventHandler(this.nudPercentToTrade_ValueChanged);
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(186, 66);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(58, 13);
+            this.label9.TabIndex = 24;
+            this.label9.Text = "% to Trade";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1380, 426);
+            this.ClientSize = new System.Drawing.Size(1422, 439);
+            this.Controls.Add(this.lblOverloadRetryAttempts);
+            this.Controls.Add(this.nudOverloadRetryAttempts);
+            this.Controls.Add(this.chkOverloadRetry);
+            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.nudCurrentPrice);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.groupBox2);
@@ -501,6 +676,11 @@
             this.groupBox2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudAutoQuantity)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCurrentPrice)).EndInit();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudOverloadRetryAttempts)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPercentEarn)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPercentToTrade)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -541,6 +721,17 @@
         private System.Windows.Forms.Timer tmrAutotradeExecution;
         private System.Windows.Forms.NumericUpDown nudCurrentPrice;
         private System.Windows.Forms.Timer tmrClientUpdates;
+        private System.Windows.Forms.Timer Heartbeat;
+        private System.Windows.Forms.Label lblSettingsWebsocketInfo;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.Label lblBalanceAndTime;
+        private System.Windows.Forms.CheckBox chkOverloadRetry;
+        private System.Windows.Forms.NumericUpDown nudOverloadRetryAttempts;
+        private System.Windows.Forms.Label lblOverloadRetryAttempts;
+        private System.Windows.Forms.Label lblPrcEarn;
+        private System.Windows.Forms.NumericUpDown nudPercentEarn;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.NumericUpDown nudPercentToTrade;
     }
 }
 

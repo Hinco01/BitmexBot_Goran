@@ -1,5 +1,6 @@
 ﻿//using ServiceStack.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,6 +29,7 @@ namespace BitMEX
         private string apiKey;
         private string apiSecret;
         private int rateLimit;
+        List<string> errors = new List<string>();
 
         public BitMEXApi(string bitmexKey = "", string bitmexSecret = "", string bitmexDomain = "", int rateLimit = 5000)
         {
@@ -82,6 +84,22 @@ namespace BitMEX
             {
                 return hash.ComputeHash(messageBytes);
             }
+        }
+
+        public string GetExpiresArg()
+        {
+            long timestamp = (long)((DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
+
+            string expires = (timestamp + 60).ToString();
+
+            return (expires);
+        }
+
+        public string GetWebSocketSignatureString(string APISecret, string APIExpires)
+        {
+            byte[] signatureBytes = hmacsha256(Encoding.UTF8.GetBytes(APISecret), Encoding.UTF8.GetBytes("GET/realtime" + APIExpires));
+            string signatureString = ByteArrayToString(signatureBytes);
+            return signatureString;
         }
 
         private string Query(string method, string function, Dictionary<string, string> param = null, bool auth = false, bool json = false)
@@ -197,7 +215,7 @@ namespace BitMEX
 
         }
 
-        public string PostOrderPostOnly(string Symbol, string Side, double Price, int Quantity)
+        public string PostOrderPostOnly(string Symbol, string Side, decimal Price, int Quantity)
         {
             var param = new Dictionary<string, string>();
             param["symbol"] = Symbol;
@@ -206,8 +224,51 @@ namespace BitMEX
             param["ordType"] = "Limit";
             param["execInst"] = "ParticipateDoNotInitiate";
             //param["displayQty"] = 0.ToString(); //Show Order as Hidden, keep us from moving price away from our own orders
-            param["price"] = Price.ToString();
-            return Query("POST", "/order", param, true);
+            param["price"] = Price.ToString().Replace(",", ".");
+            //return Query("POST", "/order", param, true);
+
+            string res = Query("POST", "/order", param, true);
+            int RetryAttemptCount = 0;
+            int MaxRetries = RetryAttempts(res);
+            while (res.Contains("error") && RetryAttemptCount < MaxRetries)
+            {
+                errors.Add(res);
+                Thread.Sleep(500); // Force app to wait 500ms
+                res = Query("POST", "/order", param, true);
+                RetryAttemptCount++;
+                if (RetryAttemptCount == MaxRetries)
+                {
+                    errors.Add("Max rety attempts of " + MaxRetries.ToString() + " reached.");
+                    break;
+                }
+            }
+            return res;
+        }
+
+        // NEW LIMIT CLOSE OPEN POSITION
+        public string LimitCloseOpenPosition(string Symbol, decimal Price)
+        {
+            var param = new Dictionary<string, string>();
+            param["symbol"] = Symbol;
+            param["price"] = Price.ToString().Replace(",", ".");
+            //return Query("POST", "/order/closePosition", param, true);
+
+            string res = Query("POST", "/order/closePosition", param, true);
+            int RetryAttemptCount = 0;
+            int MaxRetries = RetryAttempts(res);
+            while (res.Contains("error") && RetryAttemptCount < MaxRetries)
+            {
+                errors.Add(res);
+                Thread.Sleep(500); // Force app to wait 500ms
+                res = Query("POST", "/order/closePosition", param, true);
+                RetryAttemptCount++;
+                if (RetryAttemptCount == MaxRetries)
+                {
+                    errors.Add("Max rety attempts of " + MaxRetries.ToString() + " reached.");
+                    break;
+                }
+            }
+            return res;
         }
 
         public string MarketOrder(string Symbol, string Side, int Quantity)
@@ -217,7 +278,24 @@ namespace BitMEX
             param["side"] = Side;
             param["orderQty"] = Quantity.ToString();
             param["ordType"] = "Market";
-            return Query("POST", "/order", param, true);
+            // return Query("POST", "/order", param, true);
+
+            string res = Query("POST", "/order", param, true);
+            int RetryAttemptCount = 0;
+            int MaxRetries = RetryAttempts(res);
+            while (res.Contains("error") && RetryAttemptCount < MaxRetries)
+            {
+                errors.Add(res);
+                Thread.Sleep(500); // Force app to wait 500ms
+                res = Query("POST", "/order", param, true);
+                RetryAttemptCount++;
+                if (RetryAttemptCount == MaxRetries)
+                {
+                    errors.Add("Max rety attempts of " + MaxRetries.ToString() + " reached.");
+                    break;
+                }
+            }
+            return res;
         }
 
         public string CancelAllOpenOrders(string symbol, string Note = "")
@@ -225,7 +303,24 @@ namespace BitMEX
             var param = new Dictionary<string, string>();
             param["symbol"] = symbol;
             param["text"] = Note;
-            return Query("DELETE", "/order/all", param, true, true);
+            //return Query("DELETE", "/order/all", param, true, true);
+
+            string res = Query("DELETE", "/order/all", param, true, true);
+            int RetryAttemptCount = 0;
+            int MaxRetries = RetryAttempts(res);
+            while (res.Contains("error") && RetryAttemptCount < MaxRetries)
+            {
+                errors.Add(res);
+                Thread.Sleep(500); // Force app to wait 500ms
+                res = Query("DELETE", "/order/all", param, true, true);
+                RetryAttemptCount++;
+                if (RetryAttemptCount == MaxRetries)
+                {
+                    errors.Add("Max rety attempts of " + MaxRetries.ToString() + " reached.");
+                    break;
+                }
+            }
+            return res;
         }
 
         public List<Instrument> GetActiveInstruments()
@@ -270,14 +365,59 @@ namespace BitMEX
             return JsonConvert.DeserializeObject<List<Order>>(res).Where(a => a.OrdStatus == "New" || a.OrdStatus == "PartiallyFilled").OrderByDescending(a => a.TimeStamp).ToList();
         }
 
-        public string EditOrderPrice(string OrderId, double Price)
+        public string EditOrderPrice(string OrderId, decimal Price)
         {
             var param = new Dictionary<string, string>();
             param["orderID"] = OrderId;
-            param["price"] = Price.ToString();
-            return Query("PUT", "/order", param, true, true);
+            param["price"] = Price.ToString().Replace(",", ".");
+            //return Query("PUT", "/order", param, true, true);
+
+            string res = Query("PUT", "/order", param, true, true);
+            int RetryAttemptCount = 0;
+            int MaxRetries = RetryAttempts(res);
+            while (res.Contains("error") && RetryAttemptCount < MaxRetries)
+            {
+                errors.Add(res);
+                Thread.Sleep(500); // Force app to wait 500ms
+                res = Query("PUT", "/order", param, true, true);
+                RetryAttemptCount++;
+                if (RetryAttemptCount == MaxRetries)
+                {
+                    errors.Add("Max rety attempts of " + MaxRetries.ToString() + " reached.");
+                    break;
+                }
+            }
+            return res;
         }
         #endregion
+
+        private int RetryAttempts(string res)
+        {
+            int att = 0;
+
+            if (res.Contains("Unable to cancel order due to existing state"))
+            {
+                att = 0;
+            }
+            else if (res.Contains("The system is currently overloaded. Please try again later."))
+            {
+                if (BitmexSampleBotGoran.Properties.Settings.Default.OverloadRetry)
+                {
+                    att = BitmexSampleBotGoran.Properties.Settings.Default.OverloadRetryAttempts;
+                }
+                else
+                {
+                    att = 0;
+                }
+            }
+            else if (res.Contains("error"))
+            {
+                att = 0;
+            }
+
+            return att;
+        }
+
 
         #region RateLimiter
 
@@ -303,15 +443,19 @@ namespace BitMEX
     public class OrderBook
     {
         public string Side { get; set; }
-        public double Price { get; set; }
+        public decimal Price { get; set; }
         public int Size { get; set; }
     }
 
     public class Instrument
     {
         public string Symbol { get; set; }
-        public double TickSize { get; set; }
+        public decimal TickSize { get; set; }
         public double Volume24H { get; set; }
+        public int DecimalPlacesInTickSize
+        {
+            get { return BitConverter.GetBytes(decimal.GetBits(TickSize)[3])[2]; }
+        }
     }
 
     public class Candle
@@ -341,16 +485,16 @@ namespace BitMEX
     public class Position
     {
         public DateTime TimeStamp { get; set; }
-        public double? Leverage { get; set; }
+        public decimal? Leverage { get; set; }
         public int? CurrentQty { get; set; }
         public double? CurrentCost { get; set; }
         public bool IsOpen { get; set; }
-        public double? MarkPrice { get; set; }
-        public double? UnrealisedPnl { get; set; }
-        public double? UnrealisedPnlPcnt { get; set; }
-        public double? AvgEntryPrice { get; set; }
-        public double? BreakEvenPrice { get; set; }
-        public double? LiquidationPrice { get; set; }
+        public decimal? MarkPrice { get; set; }
+        public decimal? UnrealisedPnl { get; set; }
+        public decimal? UnrealisedPnlPcnt { get; set; }
+        public decimal? AvgEntryPrice { get; set; }
+        public decimal? BreakEvenPrice { get; set; }
+        public decimal? LiquidationPrice { get; set; }
         public string Symbol { get; set; }
     }
 

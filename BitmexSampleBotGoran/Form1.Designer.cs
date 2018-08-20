@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.btnBuy = new System.Windows.Forms.Button();
             this.btnSell = new System.Windows.Forms.Button();
             this.nupQty = new System.Windows.Forms.NumericUpDown();
@@ -41,6 +42,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.lblRetry = new System.Windows.Forms.Label();
+            this.lblSettingsWebsocketInfo = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.nudMA2 = new System.Windows.Forms.NumericUpDown();
@@ -50,7 +53,10 @@
             this.ddlCandleTimes = new System.Windows.Forms.ComboBox();
             this.tmrCandleUpdater = new System.Windows.Forms.Timer(this.components);
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.lblSettingsWebsocketInfo = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.nudPercentToTrade = new System.Windows.Forms.NumericUpDown();
+            this.lblPrcEarn = new System.Windows.Forms.Label();
+            this.nudPercentEarn = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.ddlAutoOrderType = new System.Windows.Forms.ComboBox();
@@ -69,22 +75,36 @@
             this.chkOverloadRetry = new System.Windows.Forms.CheckBox();
             this.nudOverloadRetryAttempts = new System.Windows.Forms.NumericUpDown();
             this.lblOverloadRetryAttempts = new System.Windows.Forms.Label();
-            this.nudPercentEarn = new System.Windows.Forms.NumericUpDown();
-            this.lblPrcEarn = new System.Windows.Forms.Label();
-            this.nudPercentToTrade = new System.Windows.Forms.NumericUpDown();
-            this.label9 = new System.Windows.Forms.Label();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.txtPositionClosePosition = new System.Windows.Forms.TextBox();
+            this.txtPositionUnrealizedPnLPercent = new System.Windows.Forms.TextBox();
+            this.txtPositionUnrealizedPnL = new System.Windows.Forms.TextBox();
+            this.txtPositionMargin = new System.Windows.Forms.TextBox();
+            this.txtPositionLiquidation = new System.Windows.Forms.TextBox();
+            this.txtPositionMarkPrice = new System.Windows.Forms.TextBox();
+            this.txtPositionEntryPrice = new System.Windows.Forms.TextBox();
+            this.txtPositionSize = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.nupQty)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles)).BeginInit();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPercentToTrade)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPercentEarn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudAutoQuantity)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCurrentPrice)).BeginInit();
             this.groupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudOverloadRetryAttempts)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudPercentEarn)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudPercentToTrade)).BeginInit();
+            this.groupBox4.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnBuy
@@ -114,7 +134,7 @@
             this.nupQty.Enabled = false;
             this.nupQty.Location = new System.Drawing.Point(169, 131);
             this.nupQty.Maximum = new decimal(new int[] {
-            100000,
+            1000000000,
             0,
             0,
             0});
@@ -171,6 +191,7 @@
             // ddNetwork
             // 
             this.ddNetwork.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.ddNetwork.Enabled = false;
             this.ddNetwork.FormattingEnabled = true;
             this.ddNetwork.Items.AddRange(new object[] {
             "TestNet",
@@ -224,6 +245,7 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.lblRetry);
             this.groupBox1.Controls.Add(this.lblSettingsWebsocketInfo);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.label4);
@@ -238,6 +260,24 @@
             this.groupBox1.TabIndex = 11;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Candles";
+            // 
+            // lblRetry
+            // 
+            this.lblRetry.AutoSize = true;
+            this.lblRetry.Location = new System.Drawing.Point(559, 23);
+            this.lblRetry.Name = "lblRetry";
+            this.lblRetry.Size = new System.Drawing.Size(38, 13);
+            this.lblRetry.TabIndex = 11;
+            this.lblRetry.Text = "Retry: ";
+            // 
+            // lblSettingsWebsocketInfo
+            // 
+            this.lblSettingsWebsocketInfo.AutoSize = true;
+            this.lblSettingsWebsocketInfo.Location = new System.Drawing.Point(822, 23);
+            this.lblSettingsWebsocketInfo.Name = "lblSettingsWebsocketInfo";
+            this.lblSettingsWebsocketInfo.Size = new System.Drawing.Size(89, 13);
+            this.lblSettingsWebsocketInfo.TabIndex = 6;
+            this.lblSettingsWebsocketInfo.Text = "Websocket Info: ";
             // 
             // label5
             // 
@@ -298,9 +338,9 @@
             this.chkUpdateCandles.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkUpdateCandles.Location = new System.Drawing.Point(157, 22);
             this.chkUpdateCandles.Name = "chkUpdateCandles";
-            this.chkUpdateCandles.Size = new System.Drawing.Size(111, 17);
+            this.chkUpdateCandles.Size = new System.Drawing.Size(105, 17);
             this.chkUpdateCandles.TabIndex = 4;
-            this.chkUpdateCandles.Text = "Update Every 10s";
+            this.chkUpdateCandles.Text = "Update Every 6s";
             this.chkUpdateCandles.UseVisualStyleBackColor = true;
             this.chkUpdateCandles.CheckedChanged += new System.EventHandler(this.chkUpdateCandles_CheckedChanged);
             // 
@@ -334,7 +374,7 @@
             // 
             // tmrCandleUpdater
             // 
-            this.tmrCandleUpdater.Interval = 10000;
+            this.tmrCandleUpdater.Interval = 6000;
             this.tmrCandleUpdater.Tick += new System.EventHandler(this.tmrCandleUpdater_Tick);
             // 
             // groupBox2
@@ -358,14 +398,69 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Automated Trading";
             // 
-            // lblSettingsWebsocketInfo
+            // label9
             // 
-            this.lblSettingsWebsocketInfo.AutoSize = true;
-            this.lblSettingsWebsocketInfo.Location = new System.Drawing.Point(576, 21);
-            this.lblSettingsWebsocketInfo.Name = "lblSettingsWebsocketInfo";
-            this.lblSettingsWebsocketInfo.Size = new System.Drawing.Size(89, 13);
-            this.lblSettingsWebsocketInfo.TabIndex = 6;
-            this.lblSettingsWebsocketInfo.Text = "Websocket Info: ";
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(186, 66);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(58, 13);
+            this.label9.TabIndex = 24;
+            this.label9.Text = "% to Trade";
+            // 
+            // nudPercentToTrade
+            // 
+            this.nudPercentToTrade.Location = new System.Drawing.Point(189, 82);
+            this.nudPercentToTrade.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudPercentToTrade.Name = "nudPercentToTrade";
+            this.nudPercentToTrade.Size = new System.Drawing.Size(60, 20);
+            this.nudPercentToTrade.TabIndex = 23;
+            this.nudPercentToTrade.Value = new decimal(new int[] {
+            75,
+            0,
+            0,
+            0});
+            this.nudPercentToTrade.ValueChanged += new System.EventHandler(this.nudPercentToTrade_ValueChanged);
+            // 
+            // lblPrcEarn
+            // 
+            this.lblPrcEarn.AutoSize = true;
+            this.lblPrcEarn.Location = new System.Drawing.Point(186, 14);
+            this.lblPrcEarn.Name = "lblPrcEarn";
+            this.lblPrcEarn.Size = new System.Drawing.Size(51, 13);
+            this.lblPrcEarn.TabIndex = 22;
+            this.lblPrcEarn.Text = "% to earn";
+            // 
+            // nudPercentEarn
+            // 
+            this.nudPercentEarn.DecimalPlaces = 2;
+            this.nudPercentEarn.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.nudPercentEarn.Location = new System.Drawing.Point(189, 33);
+            this.nudPercentEarn.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nudPercentEarn.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.nudPercentEarn.Name = "nudPercentEarn";
+            this.nudPercentEarn.Size = new System.Drawing.Size(60, 20);
+            this.nudPercentEarn.TabIndex = 21;
+            this.nudPercentEarn.Value = new decimal(new int[] {
+            75,
+            0,
+            0,
+            131072});
             // 
             // label7
             // 
@@ -418,6 +513,7 @@
             // rdoSwitch
             // 
             this.rdoSwitch.AutoSize = true;
+            this.rdoSwitch.Enabled = false;
             this.rdoSwitch.Location = new System.Drawing.Point(125, 76);
             this.rdoSwitch.Name = "rdoSwitch";
             this.rdoSwitch.Size = new System.Drawing.Size(57, 17);
@@ -438,12 +534,10 @@
             // rdoBuy
             // 
             this.rdoBuy.AutoSize = true;
-            this.rdoBuy.Checked = true;
             this.rdoBuy.Location = new System.Drawing.Point(125, 14);
             this.rdoBuy.Name = "rdoBuy";
             this.rdoBuy.Size = new System.Drawing.Size(43, 17);
             this.rdoBuy.TabIndex = 1;
-            this.rdoBuy.TabStop = true;
             this.rdoBuy.Text = "Buy";
             this.rdoBuy.UseVisualStyleBackColor = true;
             // 
@@ -575,75 +669,173 @@
             this.lblOverloadRetryAttempts.TabIndex = 20;
             this.lblOverloadRetryAttempts.Text = "Overload Retry Attempts";
             // 
-            // nudPercentEarn
+            // groupBox4
             // 
-            this.nudPercentEarn.DecimalPlaces = 2;
-            this.nudPercentEarn.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
-            this.nudPercentEarn.Location = new System.Drawing.Point(189, 33);
-            this.nudPercentEarn.Maximum = new decimal(new int[] {
-            1000,
-            0,
-            0,
-            0});
-            this.nudPercentEarn.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
-            this.nudPercentEarn.Name = "nudPercentEarn";
-            this.nudPercentEarn.Size = new System.Drawing.Size(60, 20);
-            this.nudPercentEarn.TabIndex = 21;
-            this.nudPercentEarn.Value = new decimal(new int[] {
-            5,
-            0,
-            0,
-            65536});
+            this.groupBox4.Controls.Add(this.label17);
+            this.groupBox4.Controls.Add(this.label16);
+            this.groupBox4.Controls.Add(this.label15);
+            this.groupBox4.Controls.Add(this.label14);
+            this.groupBox4.Controls.Add(this.label13);
+            this.groupBox4.Controls.Add(this.label12);
+            this.groupBox4.Controls.Add(this.label11);
+            this.groupBox4.Controls.Add(this.label10);
+            this.groupBox4.Controls.Add(this.txtPositionClosePosition);
+            this.groupBox4.Controls.Add(this.txtPositionUnrealizedPnLPercent);
+            this.groupBox4.Controls.Add(this.txtPositionUnrealizedPnL);
+            this.groupBox4.Controls.Add(this.txtPositionMargin);
+            this.groupBox4.Controls.Add(this.txtPositionLiquidation);
+            this.groupBox4.Controls.Add(this.txtPositionMarkPrice);
+            this.groupBox4.Controls.Add(this.txtPositionEntryPrice);
+            this.groupBox4.Controls.Add(this.txtPositionSize);
+            this.groupBox4.Location = new System.Drawing.Point(463, 18);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(635, 67);
+            this.groupBox4.TabIndex = 21;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "Open Position";
             // 
-            // lblPrcEarn
+            // label17
             // 
-            this.lblPrcEarn.AutoSize = true;
-            this.lblPrcEarn.Location = new System.Drawing.Point(186, 14);
-            this.lblPrcEarn.Name = "lblPrcEarn";
-            this.lblPrcEarn.Size = new System.Drawing.Size(51, 13);
-            this.lblPrcEarn.TabIndex = 22;
-            this.lblPrcEarn.Text = "% to earn";
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(492, 22);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(73, 13);
+            this.label17.TabIndex = 16;
+            this.label17.Text = "Close Position";
             // 
-            // nudPercentToTrade
+            // label16
             // 
-            this.nudPercentToTrade.Location = new System.Drawing.Point(189, 82);
-            this.nudPercentToTrade.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.nudPercentToTrade.Name = "nudPercentToTrade";
-            this.nudPercentToTrade.Size = new System.Drawing.Size(60, 20);
-            this.nudPercentToTrade.TabIndex = 23;
-            this.nudPercentToTrade.Value = new decimal(new int[] {
-            50,
-            0,
-            0,
-            0});
-            this.nudPercentToTrade.ValueChanged += new System.EventHandler(this.nudPercentToTrade_ValueChanged);
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(423, 22);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(56, 13);
+            this.label16.TabIndex = 15;
+            this.label16.Text = "UnrlPnL %";
             // 
-            // label9
+            // label15
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(186, 66);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(58, 13);
-            this.label9.TabIndex = 24;
-            this.label9.Text = "% to Trade";
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(354, 22);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(57, 13);
+            this.label15.TabIndex = 14;
+            this.label15.Text = "UnrealPnL";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(285, 22);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(39, 13);
+            this.label14.TabIndex = 13;
+            this.label14.Text = "Margin";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(216, 22);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(58, 13);
+            this.label13.TabIndex = 12;
+            this.label13.Text = "Liquidation";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(147, 22);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(31, 13);
+            this.label12.TabIndex = 11;
+            this.label12.Text = "Mark";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(78, 22);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(31, 13);
+            this.label11.TabIndex = 10;
+            this.label11.Text = "Entry";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(9, 22);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(27, 13);
+            this.label10.TabIndex = 8;
+            this.label10.Text = "Size";
+            // 
+            // txtPositionClosePosition
+            // 
+            this.txtPositionClosePosition.Enabled = false;
+            this.txtPositionClosePosition.Location = new System.Drawing.Point(495, 41);
+            this.txtPositionClosePosition.Name = "txtPositionClosePosition";
+            this.txtPositionClosePosition.Size = new System.Drawing.Size(63, 20);
+            this.txtPositionClosePosition.TabIndex = 7;
+            // 
+            // txtPositionUnrealizedPnLPercent
+            // 
+            this.txtPositionUnrealizedPnLPercent.Enabled = false;
+            this.txtPositionUnrealizedPnLPercent.Location = new System.Drawing.Point(426, 41);
+            this.txtPositionUnrealizedPnLPercent.Name = "txtPositionUnrealizedPnLPercent";
+            this.txtPositionUnrealizedPnLPercent.Size = new System.Drawing.Size(63, 20);
+            this.txtPositionUnrealizedPnLPercent.TabIndex = 6;
+            // 
+            // txtPositionUnrealizedPnL
+            // 
+            this.txtPositionUnrealizedPnL.Enabled = false;
+            this.txtPositionUnrealizedPnL.Location = new System.Drawing.Point(357, 41);
+            this.txtPositionUnrealizedPnL.Name = "txtPositionUnrealizedPnL";
+            this.txtPositionUnrealizedPnL.Size = new System.Drawing.Size(63, 20);
+            this.txtPositionUnrealizedPnL.TabIndex = 5;
+            // 
+            // txtPositionMargin
+            // 
+            this.txtPositionMargin.Enabled = false;
+            this.txtPositionMargin.Location = new System.Drawing.Point(288, 41);
+            this.txtPositionMargin.Name = "txtPositionMargin";
+            this.txtPositionMargin.Size = new System.Drawing.Size(63, 20);
+            this.txtPositionMargin.TabIndex = 4;
+            // 
+            // txtPositionLiquidation
+            // 
+            this.txtPositionLiquidation.Enabled = false;
+            this.txtPositionLiquidation.Location = new System.Drawing.Point(219, 41);
+            this.txtPositionLiquidation.Name = "txtPositionLiquidation";
+            this.txtPositionLiquidation.Size = new System.Drawing.Size(63, 20);
+            this.txtPositionLiquidation.TabIndex = 3;
+            // 
+            // txtPositionMarkPrice
+            // 
+            this.txtPositionMarkPrice.Enabled = false;
+            this.txtPositionMarkPrice.Location = new System.Drawing.Point(150, 41);
+            this.txtPositionMarkPrice.Name = "txtPositionMarkPrice";
+            this.txtPositionMarkPrice.Size = new System.Drawing.Size(63, 20);
+            this.txtPositionMarkPrice.TabIndex = 2;
+            // 
+            // txtPositionEntryPrice
+            // 
+            this.txtPositionEntryPrice.Enabled = false;
+            this.txtPositionEntryPrice.Location = new System.Drawing.Point(81, 41);
+            this.txtPositionEntryPrice.Name = "txtPositionEntryPrice";
+            this.txtPositionEntryPrice.Size = new System.Drawing.Size(63, 20);
+            this.txtPositionEntryPrice.TabIndex = 1;
+            // 
+            // txtPositionSize
+            // 
+            this.txtPositionSize.Enabled = false;
+            this.txtPositionSize.Location = new System.Drawing.Point(12, 41);
+            this.txtPositionSize.Name = "txtPositionSize";
+            this.txtPositionSize.Size = new System.Drawing.Size(63, 20);
+            this.txtPositionSize.TabIndex = 0;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1422, 439);
+            this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.lblOverloadRetryAttempts);
             this.Controls.Add(this.nudOverloadRetryAttempts);
             this.Controls.Add(this.chkOverloadRetry);
@@ -663,6 +855,7 @@
             this.Controls.Add(this.nupQty);
             this.Controls.Add(this.btnSell);
             this.Controls.Add(this.btnBuy);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "BitMex Bot Goran";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
@@ -674,13 +867,15 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPercentToTrade)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPercentEarn)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudAutoQuantity)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCurrentPrice)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudOverloadRetryAttempts)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudPercentEarn)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudPercentToTrade)).EndInit();
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -732,6 +927,24 @@
         private System.Windows.Forms.NumericUpDown nudPercentEarn;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.NumericUpDown nudPercentToTrade;
+        private System.Windows.Forms.Label lblRetry;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox txtPositionClosePosition;
+        private System.Windows.Forms.TextBox txtPositionUnrealizedPnLPercent;
+        private System.Windows.Forms.TextBox txtPositionUnrealizedPnL;
+        private System.Windows.Forms.TextBox txtPositionMargin;
+        private System.Windows.Forms.TextBox txtPositionLiquidation;
+        private System.Windows.Forms.TextBox txtPositionMarkPrice;
+        private System.Windows.Forms.TextBox txtPositionEntryPrice;
+        private System.Windows.Forms.TextBox txtPositionSize;
     }
 }
 

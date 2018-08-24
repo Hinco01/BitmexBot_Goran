@@ -38,6 +38,10 @@ Testenet: ddNetwork.SelectedIndex = 0;
 
 Live system: ddNetwork.SelectedIndex = 1;
 #
-3) Compile and run
+3) 
+Compile and run
 #
-4) in BitMex set Leverage to 5x - It only works correctly with 5x leverage !!!!!!!!!!!!
+4) 
+In BitMex set Leverage to 5x - It only works correctly with 5x leverage !!!!!!!!!!!!
+
+Use only TestingWebSocket branch !!!!!!!!!

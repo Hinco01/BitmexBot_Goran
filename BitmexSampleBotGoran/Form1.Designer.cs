@@ -92,6 +92,15 @@
             this.txtPositionMarkPrice = new System.Windows.Forms.TextBox();
             this.txtPositionEntryPrice = new System.Windows.Forms.TextBox();
             this.txtPositionSize = new System.Windows.Forms.TextBox();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.txtOrderPrice = new System.Windows.Forms.TextBox();
+            this.txtOrderSize = new System.Windows.Forms.TextBox();
+            this.txtOrderSide = new System.Windows.Forms.TextBox();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
+            this.label20 = new System.Windows.Forms.Label();
+            this.txtOrderStatus = new System.Windows.Forms.TextBox();
+            this.label21 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nupQty)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA2)).BeginInit();
@@ -105,6 +114,7 @@
             this.groupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudOverloadRetryAttempts)).BeginInit();
             this.groupBox4.SuspendLayout();
+            this.groupBox5.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnBuy
@@ -340,7 +350,7 @@
             this.chkUpdateCandles.Name = "chkUpdateCandles";
             this.chkUpdateCandles.Size = new System.Drawing.Size(105, 17);
             this.chkUpdateCandles.TabIndex = 4;
-            this.chkUpdateCandles.Text = "Update Every 6s";
+            this.chkUpdateCandles.Text = "Update Every 3s";
             this.chkUpdateCandles.UseVisualStyleBackColor = true;
             this.chkUpdateCandles.CheckedChanged += new System.EventHandler(this.chkUpdateCandles_CheckedChanged);
             // 
@@ -374,7 +384,7 @@
             // 
             // tmrCandleUpdater
             // 
-            this.tmrCandleUpdater.Interval = 6000;
+            this.tmrCandleUpdater.Interval = 3000;
             this.tmrCandleUpdater.Tick += new System.EventHandler(this.tmrCandleUpdater_Tick);
             // 
             // groupBox2
@@ -563,7 +573,7 @@
             // 
             // tmrAutotradeExecution
             // 
-            this.tmrAutotradeExecution.Interval = 5000;
+            this.tmrAutotradeExecution.Interval = 1500;
             this.tmrAutotradeExecution.Tick += new System.EventHandler(this.tmrAutotradeExecution_Tick);
             // 
             // nudCurrentPrice
@@ -830,11 +840,97 @@
             this.txtPositionSize.Size = new System.Drawing.Size(63, 20);
             this.txtPositionSize.TabIndex = 0;
             // 
+            // groupBox5
+            // 
+            this.groupBox5.Controls.Add(this.label21);
+            this.groupBox5.Controls.Add(this.txtOrderStatus);
+            this.groupBox5.Controls.Add(this.label20);
+            this.groupBox5.Controls.Add(this.label19);
+            this.groupBox5.Controls.Add(this.label18);
+            this.groupBox5.Controls.Add(this.txtOrderSide);
+            this.groupBox5.Controls.Add(this.txtOrderSize);
+            this.groupBox5.Controls.Add(this.txtOrderPrice);
+            this.groupBox5.Location = new System.Drawing.Point(1104, 18);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(299, 67);
+            this.groupBox5.TabIndex = 22;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Open Orders";
+            // 
+            // txtOrderPrice
+            // 
+            this.txtOrderPrice.Enabled = false;
+            this.txtOrderPrice.Location = new System.Drawing.Point(75, 41);
+            this.txtOrderPrice.Name = "txtOrderPrice";
+            this.txtOrderPrice.Size = new System.Drawing.Size(63, 20);
+            this.txtOrderPrice.TabIndex = 1;
+            // 
+            // txtOrderSize
+            // 
+            this.txtOrderSize.Enabled = false;
+            this.txtOrderSize.Location = new System.Drawing.Point(6, 41);
+            this.txtOrderSize.Name = "txtOrderSize";
+            this.txtOrderSize.Size = new System.Drawing.Size(63, 20);
+            this.txtOrderSize.TabIndex = 2;
+            // 
+            // txtOrderSide
+            // 
+            this.txtOrderSide.Enabled = false;
+            this.txtOrderSide.Location = new System.Drawing.Point(144, 41);
+            this.txtOrderSide.Name = "txtOrderSide";
+            this.txtOrderSide.Size = new System.Drawing.Size(63, 20);
+            this.txtOrderSide.TabIndex = 23;
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(6, 25);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(27, 13);
+            this.label18.TabIndex = 17;
+            this.label18.Text = "Size";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(72, 25);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(31, 13);
+            this.label19.TabIndex = 24;
+            this.label19.Text = "Price";
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(141, 25);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(28, 13);
+            this.label20.TabIndex = 25;
+            this.label20.Text = "Side";
+            // 
+            // txtOrderStatus
+            // 
+            this.txtOrderStatus.Enabled = false;
+            this.txtOrderStatus.Location = new System.Drawing.Point(213, 41);
+            this.txtOrderStatus.Name = "txtOrderStatus";
+            this.txtOrderStatus.Size = new System.Drawing.Size(63, 20);
+            this.txtOrderStatus.TabIndex = 26;
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(210, 25);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(37, 13);
+            this.label21.TabIndex = 27;
+            this.label21.Text = "Status";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1422, 439);
+            this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.lblOverloadRetryAttempts);
             this.Controls.Add(this.nudOverloadRetryAttempts);
@@ -876,6 +972,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudOverloadRetryAttempts)).EndInit();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -945,6 +1043,15 @@
         private System.Windows.Forms.TextBox txtPositionMarkPrice;
         private System.Windows.Forms.TextBox txtPositionEntryPrice;
         private System.Windows.Forms.TextBox txtPositionSize;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.TextBox txtOrderSide;
+        private System.Windows.Forms.TextBox txtOrderSize;
+        private System.Windows.Forms.TextBox txtOrderPrice;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.TextBox txtOrderStatus;
     }
 }
 

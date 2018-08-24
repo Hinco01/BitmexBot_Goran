@@ -745,7 +745,10 @@ namespace BitMEX
         public double? AVGLoss { get; set; } // For RSI
     }
 
-    public class Position
+
+
+
+        public class Position
     {
         public DateTime TimeStamp { get; set; }
         public decimal? Leverage { get; set; }
@@ -795,8 +798,65 @@ namespace BitMEX
         public string OrdType { get; set; }
         public string OrderId { get; set; }
         public string Side { get; set; }
-        public double? Price { get; set; }
+        public decimal? Price { get; set; }
         public int? OrderQty { get; set; }
         public int? DisplayQty { get; set; }
+        public bool? WorkingIndicator { get; set; }
+        public decimal? StopPx { get; set; }
+        public string TimeInForce { get; set; }
+        public int? LeavesQty { get; set; }
+        public int? CumQty { get; set; }
+
     }
+
+    //public class CandleWeb
+    //{
+    //    public DateTime TimeStamp { get; set; }
+    //    public double? Open { get; set; }
+    //    public double? Close { get; set; }
+    //    public double? High { get; set; }
+    //    public double? Low { get; set; }
+    //    public double? Volume { get; set; }
+    //    public int Trades { get; set; }
+    //    public int PCC { get; set; }  // Previous Candle Count     
+    //    public string TDUoD { get; set; }
+    //    public int TDSeq { get; set; }
+    //    public double? MACDHistorgram { get; set; }
+    //    public double? RSI { get; set; } // For RSI
+    //    public double? MA1 { get; set; }
+    //    public double? MA2 { get; set; }
+    //    public double? BBUpper { get; set; }
+    //    public double? BBMiddle { get; set; }
+    //    public double? BBLower { get; set; }
+    //    public double? EMA1 { get; set; }
+    //    public double? EMA2 { get; set; }
+    //    public double? EMA3 { get; set; }
+    //    public double? MACDLine { get; set; }
+    //    public double? MACDSignalLine { get; set; }
+    //    //public double? MACDHistorgram { get; set; }
+    //    public double? STOCHK { get; set; }
+    //    public double? STOCHD { get; set; }
+    //    public double? TR { get; set; }
+    //    public double? ATR1 { get; set; }
+    //    public double? ATR2 { get; set; }
+    //    public void SetTR(double? PreviousClose)
+    //    {
+    //        List<double?> TRs = new List<double?>();
+
+    //        TRs.Add(High - Low);
+    //        TRs.Add(Convert.ToDouble(Math.Abs(Convert.ToDecimal(High - PreviousClose))));
+    //        TRs.Add(Convert.ToDouble(Math.Abs(Convert.ToDecimal(Low - PreviousClose))));
+
+    //        TR = TRs.Max();
+    //    }
+
+    //    public double? GainOrLoss // For RSI
+    //    {
+    //        get { return (Close - Open) ?? 0; } // 0 if null
+    //    }
+    //    public double? RS { get; set; } // For RSI
+    //    //public double? RSI { get; set; } // For RSI
+    //    public double? AVGGain { get; set; } // For RSI
+    //    public double? AVGLoss { get; set; } // For RSI
+    //}
 }

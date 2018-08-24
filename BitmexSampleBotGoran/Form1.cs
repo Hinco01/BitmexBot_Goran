@@ -42,7 +42,9 @@ namespace BitmexSampleBotGoran
         List<Instrument> ActiveInstruments = new List<Instrument>();
         Instrument ActiveInstrument = new Instrument();
         List<Candle> Candles = new List<Candle>();
-        List<Candle> CandlesCHECK = new List<Candle>();
+        //List<Candle> CandlesCHECK = new List<Candle>();
+        //List<CandleDisplay> CandleDisplays = new List<CandleDisplay>();
+        //List<CandleWeb> CandlesWebS = new List<CandleWeb>();
 
         bool Running = false;
         string Mode = "Wait";
@@ -84,6 +86,16 @@ namespace BitmexSampleBotGoran
         List<OrderBook> OrderBookTopAsks = new List<OrderBook>();
         List<OrderBook> OrderBookTopBids = new List<OrderBook>();
         Position SymbolPosition = new Position();
+        //CandleWeb CandlesWebSocket = new CandleWeb();
+        Order SymbolOrder = new Order();
+        //OrderBook SymbolOrderBook = new OrderBook();
+
+        decimal OBBuyPriceValue = 0;
+        String OBBuySideValue;
+
+        decimal OBSellPriceValue = 0;
+        String OBBSellSideValue;
+
         decimal Balance = 0;
 
         int Dblcheck = 0;
@@ -98,7 +110,7 @@ namespace BitmexSampleBotGoran
 
             InitializeWebSocket();
             InitializeSymbolSpecificData(true);
-            InitializeWalletWebSocket();            
+            InitializeWalletWebSocket(true);            
         }
 
         private void InitializeDropdowns()
@@ -152,10 +164,10 @@ namespace BitmexSampleBotGoran
 
         private void InitializeWebSocket ()
         {          
-            if (ws != null)
-            {
-                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"trade:" + "XBTUSD" + "\"]}");                
-            }
+            //if (ws != null)
+            //{
+             //   ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"trade:" + "XBTUSD" + "\"]}");                
+            //}
             switch (ddNetwork.SelectedItem.ToString())
             {
                 case "TestNet":                    
@@ -200,30 +212,40 @@ namespace BitmexSampleBotGoran
                                     if (TDBids.Any())
                                     {
                                         List<OrderBook> OB = new List<OrderBook>();
+                                        List<OrderBook> OBBuy = new List<OrderBook>();
                                         foreach (JArray i in TDBids)
                                         {
                                             OrderBook OBI = new OrderBook();
                                             OBI.Price = (decimal)i[0];
                                             OBI.Size = (int)i[1];
+                                            OBI.Side = "Buy";
                                             OB.Add(OBI);
+                                            OBBuy.Add(OBI);
                                         }
 
                                         OrderBookTopBids = OB;
+                                        OBBuyPriceValue = OBBuy[0].Price;
+                                        OBBuySideValue = OBBuy[0].Side;
                                     }
 
                                     JArray TDAsks = (JArray)TD[0]["asks"];
                                     if (TDAsks.Any())
                                     {
                                         List<OrderBook> OB = new List<OrderBook>();
+                                        List<OrderBook> OBSell = new List<OrderBook>();
                                         foreach (JArray i in TDAsks)
                                         {
                                             OrderBook OBI = new OrderBook();
                                             OBI.Price = (decimal)i[0];
                                             OBI.Size = (int)i[1];
+                                            OBI.Side = "Sell";
                                             OB.Add(OBI);
+                                            OBSell.Add(OBI);
                                         }
 
                                         OrderBookTopAsks = OB;
+                                        OBSellPriceValue = OBSell[0].Price;
+                                        OBBSellSideValue = OBSell[0].Side;
                                     }
                                 }
                             }
@@ -236,6 +258,10 @@ namespace BitmexSampleBotGoran
                                 JArray TD = (JArray)Message["data"];
                                 if (TD.Any())
                                 {
+
+                                    //if (TD.Children().LastOrDefault()["isOpen"] != null && (string)TD.Children().LastOrDefault()["isOpen"] == "true")
+                                    //{
+
                                     if (TD.Children().LastOrDefault()["symbol"] != null)
                                     {
                                         SymbolPosition.Symbol = (string)TD.Children().LastOrDefault()["symbol"];
@@ -278,23 +304,28 @@ namespace BitmexSampleBotGoran
                                     {
                                         SymbolPosition.OpenOrderBuyQty = (decimal?)TD.Children().LastOrDefault()["openOrderBuyQty"];
                                     }
-                                    
+
                                     if (TD.Children().LastOrDefault()["openOrderBuyCost"] != null)
                                     {
                                         SymbolPosition.OpenOrderBuyCost = (decimal?)TD.Children().LastOrDefault()["openOrderBuyCost"];
                                     }
-                                    
+
                                     if (TD.Children().LastOrDefault()["openOrderSellQty"] != null)
                                     {
                                         SymbolPosition.OpenOrderSellQty = (decimal?)TD.Children().LastOrDefault()["openOrderSellQty"];
                                     }
-                                    
+
                                     if (TD.Children().LastOrDefault()["openOrderSellCost"] != null)
                                     {
                                         SymbolPosition.OpenOrderSellCost = (decimal?)TD.Children().LastOrDefault()["openOrderSellCost"];
                                     }
-                                    
 
+                                    if (TD.Children().LastOrDefault()["isOpen"] != null)
+                                    {
+                                        SymbolPosition.IsOpen = (bool)TD.Children().LastOrDefault()["isOpen"];
+                                    }
+
+                                    //}
                                 }
                             }
                         }
@@ -316,6 +347,94 @@ namespace BitmexSampleBotGoran
                                     }
                                 }
                             }
+                        }
+                        else if ((string)Message["table"] == "order")
+                        {
+
+                            if (Message.ContainsKey("data"))
+                            {
+                                JArray TD = (JArray)Message["data"];
+                                if (TD.Any())
+                                {
+
+                                    //if ((string)TD.Children().LastOrDefault()["orderID"] == SymbolOrder.OrderId)
+                                    //{
+
+                                    if (TD.Children().LastOrDefault()["symbol"] != null)
+                                    {
+                                        SymbolOrder.Symbol = (string)TD.Children().LastOrDefault()["symbol"];
+                                    }
+                                    if (TD.Children().LastOrDefault()["orderQty"] != null)
+                                    {
+                                        SymbolOrder.OrderQty = (int?)TD.Children().LastOrDefault()["orderQty"];
+
+                                    }
+                                    if (TD.Children().LastOrDefault()["ordType"] != null)
+                                    {
+                                        SymbolOrder.OrdType = (string)TD.Children().LastOrDefault()["ordType"];
+
+                                    }
+                                    if (TD.Children().LastOrDefault()["ordStatus"] != null)
+                                    {
+                                        SymbolOrder.OrdStatus = (string)TD.Children().LastOrDefault()["ordStatus"];
+
+                                    }
+                                    if (TD.Children().LastOrDefault()["orderID"] != null)
+                                    {
+                                        SymbolOrder.OrderId = (string)TD.Children().LastOrDefault()["orderID"];
+                                    }
+                                    if (TD.Children().LastOrDefault()["side"] != null)
+                                    {
+                                        SymbolOrder.Side = (string)TD.Children().LastOrDefault()["side"];
+
+                                    }
+                                    if (TD.Children().LastOrDefault()["price"] != null)
+                                    {
+                                        SymbolOrder.Price = (decimal?)TD.Children().LastOrDefault()["price"];
+                                    }
+                                    if (TD.Children().LastOrDefault()["displayQty"] != null)
+                                    {
+                                        SymbolOrder.DisplayQty = (int?)TD.Children().LastOrDefault()["displayQty"];
+
+                                    }
+
+                                    if (TD.Children().LastOrDefault()["workingIndicator"] != null)
+                                    {
+                                        SymbolOrder.WorkingIndicator = (bool?)TD.Children().LastOrDefault()["workingIndicator"];
+                                    }
+
+                                    if (TD.Children().LastOrDefault()["stopPx"] != null)
+                                    {
+                                        SymbolOrder.StopPx = (decimal?)TD.Children().LastOrDefault()["stopPx"];
+                                    }
+
+                                    if (TD.Children().LastOrDefault()["timeInForce"] != null)
+                                    {
+                                        SymbolOrder.TimeInForce = (string)TD.Children().LastOrDefault()["timeInForce"];
+                                    }
+
+                                    if (TD.Children().LastOrDefault()["leavesQty"] != null)
+                                    {
+                                        SymbolOrder.LeavesQty = (int?)TD.Children().LastOrDefault()["leavesQty"];
+                                    }
+                                    if (TD.Children().LastOrDefault()["cumQty"] != null)
+                                    {
+                                        SymbolOrder.CumQty = (int?)TD.Children().LastOrDefault()["cumQty"];
+                                    }
+                                    if (TD.Children().LastOrDefault()["timestamp"] != null)
+                                    {
+                                        SymbolOrder.TimeStamp = (DateTime)TD.Children().LastOrDefault()["timestamp"];
+                                    }
+
+                                    //}
+                                }
+                            }
+
+
+                        }
+                        else if ((string)Message["table"] == "orderBookL2")
+                        {
+
                         }
                     }
                     else if (Message.ContainsKey("info") && Message.ContainsKey("docs"))
@@ -358,10 +477,17 @@ namespace BitmexSampleBotGoran
                 // Unsubscribe from old instrument position
                 ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"position:" + ActiveInstrument.Symbol + "\"]}");
 
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"order:" + ActiveInstrument.Symbol + "\"]}");
+
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"trade:" + ActiveInstrument.Symbol + "\"]}");
+
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"orderBookL2:" + ActiveInstrument.Symbol + "\"]}");
 
                 ActiveInstrument = bitmex.GetInstrument(((Instrument)ddlSymbol.SelectedItem).Symbol)[0];
             }
 
+            ws.Send("{\"op\": \"subscribe\", \"args\": [\"orderBookL2:" + ActiveInstrument.Symbol + "\"]}");
+            ws.Send("{\"op\": \"subscribe\", \"args\": [\"order:" + ActiveInstrument.Symbol + "\"]}");
             // Subscribe to new orderbook
             ws.Send("{\"op\": \"subscribe\", \"args\": [\"orderBook10:" + ActiveInstrument.Symbol + "\"]}");
             // Subscribe to position for new symbol
@@ -372,14 +498,23 @@ namespace BitmexSampleBotGoran
 
         }
 
+        private void InitializeWalletWebSocket(bool FirstLoadWallet = false)
+        {
+            if (!FirstLoadWallet)
+            {
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"margin\"]}");
+            }
 
+            // Margin Connect - do this last so we already have the price.
+            ws.Send("{\"op\": \"subscribe\", \"args\": [\"margin\"]}");
+        }
 
         private decimal CalculateMarketOrderPrice(string Side)
         {
-            CurrentBook = bitmex.GetOrderBook(ActiveInstrument.Symbol, 1);
+            //CurrentBook = bitmex.GetOrderBook(ActiveInstrument.Symbol, 1);
 
-            decimal SellPrice = CurrentBook.Where(a => a.Side == "Sell").FirstOrDefault().Price;
-            decimal BuyPrice = CurrentBook.Where(a => a.Side == "Buy").FirstOrDefault().Price;
+            decimal SellPrice = OBSellPriceValue;
+            decimal BuyPrice = OBBuyPriceValue;
 
             decimal OrderPrice = 0;
 
@@ -480,7 +615,9 @@ namespace BitmexSampleBotGoran
             {
                 InitializeAPI();
                 InitializeWebSocket();
-                InitializeSymbolSpecificData();                
+                InitializeSymbolSpecificData();
+                InitializeWalletWebSocket();
+                UpdatePositionInfo();
             }
             else
             {
@@ -804,7 +941,25 @@ namespace BitmexSampleBotGoran
             Candles = Candles.OrderByDescending(a => a.TimeStamp).ToList();
 
                 // Show Candles
-                dgvCandles.DataSource = Candles;
+            dgvCandles.DataSource = Candles;
+
+            dgvCandles.Columns["MA1"].Visible = false;
+            dgvCandles.Columns["MA2"].Visible = false;
+            dgvCandles.Columns["EMA1"].Visible = false;
+            dgvCandles.Columns["EMA2"].Visible = false;
+            dgvCandles.Columns["EMA3"].Visible = false;
+           // dgvCandles.Columns["MACDLine"].Visible = false;
+          //  dgvCandles.Columns["MACDSignalLine"].Visible = false;
+            dgvCandles.Columns["STOCHK"].Visible = false;
+            dgvCandles.Columns["STOCHD"].Visible = false;
+            dgvCandles.Columns["TR"].Visible = false;
+            dgvCandles.Columns["ATR1"].Visible = false;
+            dgvCandles.Columns["ATR2"].Visible = false;
+            dgvCandles.Columns["RS"].Visible = false;
+            dgvCandles.Columns["AVGGain"].Visible = false;
+            dgvCandles.Columns["AVGLoss"].Visible = false;
+            dgvCandles.Columns["GainOrLoss"].Visible = false;
+
 
             #endregion ORIGINAL CANDLES
 
@@ -955,11 +1110,11 @@ namespace BitmexSampleBotGoran
 
             // Determin the bot Mode based on MAs, trades happen or another timer
             if (Running) // We could set this up to also ignore setting bot mode if we've already reviewed current candles
-                             // However, if you wanted to use info from most current candle, that wouldn't work well
-                {                    
-                    SetBotMode(); // We only need to set bot mode if bot is running
-                    btnAutomatedTrading.Text = "Stop - " + Mode; // So we can see what the mode of the bot is while running
-                }           
+                            // However, if you wanted to use info from most current candle, that wouldn't work well
+            {                    
+                SetBotMode(); // We only need to set bot mode if bot is running
+                btnAutomatedTrading.Text = "Stop - " + Mode; // So we can see what the mode of the bot is while running
+            }           
 
         }
         
@@ -992,20 +1147,20 @@ namespace BitmexSampleBotGoran
                 // MACD Example
                 //if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine <= Candles[1].MACDSignalLine) && (Candles[0].Close < Candles[0].BBUpper)) // Most recently closed candle crossed over up
 
-                if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= 55)) 
+                if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= 50)) 
                 {
                     // Did the last full candle have MACDLine cross above MACDSignalLine?  We'll need to buy now.
                     Dblcheck++;
                     DblcheckSell = 0;
-                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && Dblcheck >= 6)
+                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && Dblcheck >= 12)
                     {
                         Mode = "Buy";
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && Dblcheck >= 30)
+                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && Dblcheck >= 60)
                     {
                         Mode = "Buy";
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && Dblcheck >= 360)
+                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && Dblcheck >= 720)
                     {
                         Mode = "Buy";
                     }
@@ -1085,21 +1240,21 @@ namespace BitmexSampleBotGoran
 
                 //if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine >= Candles[1].MACDSignalLine) && (Candles[0].Close > Candles[0].BBLower))
 
-                if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= 45))
+                if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= 50))
                 {
                     // Did the last full candle have MA1 cross below MA2?  We'll need to sell now
                     DblcheckSell++;
                     Dblcheck = 0;
                     
-                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && DblcheckSell >= 6)
+                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && DblcheckSell >= 12)
                     {
                         Mode = "Sell";
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && DblcheckSell >= 30)
+                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && DblcheckSell >= 60)
                     {
                         Mode = "Sell";
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && DblcheckSell >= 360)
+                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && DblcheckSell >= 720)
                     {
                         Mode = "Sell";
                     }
@@ -1236,7 +1391,9 @@ namespace BitmexSampleBotGoran
         private void tmrAutotradeExecution_Tick(object sender, EventArgs e)
         {
             // OpenPositions = bitmex.GetOpenPositions(ActiveInstrument.Symbol);
-            OpenOrders = bitmex.GetOpenOrders(ActiveInstrument.Symbol);
+            // OpenOrders = bitmex.GetOpenOrders(ActiveInstrument.Symbol);
+
+            bool OpenOrdercheck = false;
 
             if (Candles[1].TDUoD == "Up" && Candles[1].TDSeq == 1 && Candles[0].TDUoD == "Down" && Candles[0].TDSeq >= 1)
             {
@@ -1294,9 +1451,17 @@ namespace BitmexSampleBotGoran
                 UpStop = false;
             }
 
+            if (SymbolOrder.OrdStatus == "New" || SymbolOrder.OrdStatus == "PartiallyFilled")
+            {
+                OpenOrdercheck = true;
+            }
+            else
+            {
+                OpenOrdercheck = false;
+            }
 
             //if (OpenPositions.Any() && !OpenOrders.Any())
-            if (SymbolPosition.CurrentQty != 0 && !OpenOrders.Any())
+            if (SymbolPosition.IsOpen == true && OpenOrdercheck == false)
             {
                 //if (OpenPositions[0].CurrentQty > 0)
                 if (SymbolPosition.CurrentQty > 0)
@@ -1331,17 +1496,17 @@ namespace BitmexSampleBotGoran
                 }
             }
             //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Sell"))
-            else if (SymbolPosition.CurrentQty != 0 && OpenOrders.Any() && SymbolPosition.CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Sell"))
+            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Sell")
             {
                 goto SkipToEnd;
             }
             //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Buy"))
-            else if (SymbolPosition.CurrentQty != 0 && OpenOrders.Any() && SymbolPosition.CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Buy"))
+            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy")
             {
                 goto SkipToEnd;
             }
             //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Buy"))
-            else if (SymbolPosition.CurrentQty != 0 && OpenOrders.Any() && SymbolPosition.CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Buy"))
+            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Buy")
             {
                 if (rdoBuy.Checked)
                 {
@@ -1353,7 +1518,7 @@ namespace BitmexSampleBotGoran
                 }
             }
             //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Sell"))
-            else if (SymbolPosition.CurrentQty != 0 && OpenOrders.Any() && SymbolPosition.CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Sell"))
+            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy")
             {
                 if (rdoBuy.Checked)
                 {                    
@@ -1365,7 +1530,7 @@ namespace BitmexSampleBotGoran
                 }
             }
             //else if (!OpenPositions.Any() && !OpenOrders.Any())
-            else if (SymbolPosition.CurrentQty == 0 && !OpenOrders.Any())
+            else if (SymbolPosition.IsOpen == false && OpenOrdercheck == false)
             {
                 if (rdoBuy.Checked && Mode == "Buy")
                 {
@@ -1377,9 +1542,9 @@ namespace BitmexSampleBotGoran
                 }
             }
             //else if (!OpenPositions.Any() && OpenOrders.Any())
-            else if (SymbolPosition.CurrentQty == 0 && OpenOrders.Any())
+            else if (SymbolPosition.IsOpen == false && OpenOrdercheck == true)
             {
-                if (rdoBuy.Checked && OpenOrders.Any(a => a.Side == "Sell"))
+                if (rdoBuy.Checked && SymbolOrder.Side == "Sell")
                 {
                     if (Mode == "Buy")
                     {
@@ -1391,7 +1556,7 @@ namespace BitmexSampleBotGoran
                         string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
                     }                    
                 }
-                else if (rdoSell.Checked && OpenOrders.Any(a => a.Side == "Buy"))
+                else if (rdoSell.Checked && SymbolOrder.Side == "Buy")
                 {
                     if (Mode == "Sell")
                     {
@@ -1404,11 +1569,11 @@ namespace BitmexSampleBotGoran
                     }
                 }
 
-                if (UpStop == true && OpenOrders.Any(a => a.Side == "Buy"))
+                if (UpStop == true && SymbolOrder.Side == "Buy")
                 {
                     string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
                 }
-                if (DownStop == true && OpenOrders.Any(a => a.Side == "Sell"))
+                if (DownStop == true && SymbolOrder.Side == "Sell")
                 {
                     string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
                 }
@@ -1841,18 +2006,44 @@ namespace BitmexSampleBotGoran
 
             }
         }
-
-        private void UpdatePositionInfo()
+        private void UpdateOrderInfo()
         {
-            if (SymbolPosition.CurrentQty != 0)
+            if (SymbolOrder.OrdStatus == "New" || SymbolOrder.OrdStatus == "PartiallyFilled")
+            {
+                if (SymbolOrder.Side == "Buy")
+                {
+                    txtOrderSize.Text = SymbolOrder.OrderQty.ToString();
+                }
+                else if (SymbolOrder.Side == "Sell")
+                {
+                    txtOrderSize.Text = (SymbolOrder.OrderQty * -1).ToString();
+                }
+                txtOrderPrice.Text = SymbolOrder.Price.ToString();
+                //txtOrderSize.Text = SymbolOrder.OrderQty.ToString();
+                txtOrderStatus.Text = SymbolOrder.OrdStatus;
+                txtOrderSide.Text = SymbolOrder.Side;
+            }
+            else
+            {
+                txtOrderPrice.Text = "";
+                txtOrderSize.Text = "";
+                txtOrderSide.Text = "";
+                txtOrderStatus.Text = "";
+            }
+        }
+
+
+            private void UpdatePositionInfo()
+        {
+            if (SymbolPosition.CurrentQty != 0 && SymbolPosition.IsOpen == true)
             {
                 txtPositionSize.Text = SymbolPosition.CurrentQty.ToString();
-                txtPositionEntryPrice.Text = SymbolPosition.AvgEntryPrice.ToString();
+                txtPositionEntryPrice.Text = Math.Round(Convert.ToDecimal(SymbolPosition.AvgEntryPrice), 2).ToString();
                 txtPositionMarkPrice.Text = SymbolPosition.MarkPrice.ToString();
                 txtPositionLiquidation.Text = SymbolPosition.LiquidationPrice.ToString();
                 txtPositionMargin.Text = SymbolPosition.Leverage.ToString();
                 txtPositionUnrealizedPnL.Text = SymbolPosition.UsefulUnrealisedPnl.ToString();
-                txtPositionUnrealizedPnLPercent.Text = SymbolPosition.UnrealisedPnlPcnt.ToString() + "%";
+                txtPositionUnrealizedPnLPercent.Text = Math.Round(Convert.ToDecimal(SymbolPosition.UnrealisedPnlPcnt * 5 * 100), 2).ToString() + "%";
 
                 if (SymbolPosition.OpenOrderBuyQty != 0 && SymbolPosition.OpenOrderBuyCost != 0 && SymbolPosition.OpenOrderBuyQty != null && SymbolPosition.OpenOrderBuyCost != null)
                 {
@@ -1881,14 +2072,14 @@ namespace BitmexSampleBotGoran
             }
             else
             {
-                txtPositionSize.Text = "0";
-                txtPositionEntryPrice.Text = "0";
-                txtPositionMarkPrice.Text = "0";
-                txtPositionLiquidation.Text = "0";
-                txtPositionMargin.Text = "0";
-                txtPositionUnrealizedPnL.Text = "0";
-                txtPositionUnrealizedPnLPercent.Text = "0";
-                txtPositionClosePosition.Text = "0";
+                txtPositionSize.Text = "";
+                txtPositionEntryPrice.Text = "";
+                txtPositionMarkPrice.Text = "";
+                txtPositionLiquidation.Text = "";
+                txtPositionMargin.Text = "";
+                txtPositionUnrealizedPnL.Text = "";
+                txtPositionUnrealizedPnLPercent.Text = "";
+                txtPositionClosePosition.Text = "";
             }
         }
 
@@ -1896,13 +2087,10 @@ namespace BitmexSampleBotGoran
         {
             UpdatePrice();
             UpdatePositionInfo();
+            UpdateOrderInfo();
         }
 
-        private void InitializeWalletWebSocket()
-        {
-            // Margin Connect - do this last so we already have the price.
-            ws.Send("{\"op\": \"subscribe\", \"args\": [\"margin\"]}");
-        }
+        
 
         private void Heartbeat_Tick(object sender, EventArgs e)
         {

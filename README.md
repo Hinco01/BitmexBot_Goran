@@ -25,7 +25,7 @@ My BTC address for donations: 3QxtWoY5q1NZbBXA5gsLNWzedKVLUWmTrB
 To make the bot work:
 #
 1)
-In Form1.cs add you BitMex keys and secrets
+In Form1.cs add your BitMex keys and secrets
 
 Testnet: TestbitmexKey and TestbitmexSecret
 

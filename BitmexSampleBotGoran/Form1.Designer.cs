@@ -53,6 +53,8 @@
             this.ddlCandleTimes = new System.Windows.Forms.ComboBox();
             this.tmrCandleUpdater = new System.Windows.Forms.Timer(this.components);
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.nupRSIDifference = new System.Windows.Forms.NumericUpDown();
+            this.label22 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.nudPercentToTrade = new System.Windows.Forms.NumericUpDown();
             this.lblPrcEarn = new System.Windows.Forms.Label();
@@ -71,6 +73,10 @@
             this.tmrClientUpdates = new System.Windows.Forms.Timer(this.components);
             this.Heartbeat = new System.Windows.Forms.Timer(this.components);
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.txtAPISecret = new System.Windows.Forms.TextBox();
+            this.txtAPIKey = new System.Windows.Forms.TextBox();
             this.lblBalanceAndTime = new System.Windows.Forms.Label();
             this.chkOverloadRetry = new System.Windows.Forms.CheckBox();
             this.nudOverloadRetryAttempts = new System.Windows.Forms.NumericUpDown();
@@ -93,20 +99,22 @@
             this.txtPositionEntryPrice = new System.Windows.Forms.TextBox();
             this.txtPositionSize = new System.Windows.Forms.TextBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.txtOrderPrice = new System.Windows.Forms.TextBox();
-            this.txtOrderSize = new System.Windows.Forms.TextBox();
-            this.txtOrderSide = new System.Windows.Forms.TextBox();
-            this.label18 = new System.Windows.Forms.Label();
-            this.label19 = new System.Windows.Forms.Label();
-            this.label20 = new System.Windows.Forms.Label();
-            this.txtOrderStatus = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
+            this.txtOrderStatus = new System.Windows.Forms.TextBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.txtOrderSide = new System.Windows.Forms.TextBox();
+            this.txtOrderSize = new System.Windows.Forms.TextBox();
+            this.txtOrderPrice = new System.Windows.Forms.TextBox();
+            this.lblApiValidity = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nupQty)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles)).BeginInit();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifference)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPercentToTrade)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPercentEarn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudAutoQuantity)).BeginInit();
@@ -389,6 +397,8 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.nupRSIDifference);
+            this.groupBox2.Controls.Add(this.label22);
             this.groupBox2.Controls.Add(this.label9);
             this.groupBox2.Controls.Add(this.nudPercentToTrade);
             this.groupBox2.Controls.Add(this.lblPrcEarn);
@@ -407,6 +417,32 @@
             this.groupBox2.TabIndex = 12;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Automated Trading";
+            // 
+            // nupRSIDifference
+            // 
+            this.nupRSIDifference.Location = new System.Drawing.Point(255, 32);
+            this.nupRSIDifference.Maximum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.nupRSIDifference.Name = "nupRSIDifference";
+            this.nupRSIDifference.Size = new System.Drawing.Size(60, 20);
+            this.nupRSIDifference.TabIndex = 26;
+            this.nupRSIDifference.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(252, 14);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(69, 13);
+            this.label22.TabIndex = 25;
+            this.label22.Text = "RSI diff to 50";
             // 
             // label9
             // 
@@ -617,6 +653,11 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.lblApiValidity);
+            this.groupBox3.Controls.Add(this.label24);
+            this.groupBox3.Controls.Add(this.label23);
+            this.groupBox3.Controls.Add(this.txtAPISecret);
+            this.groupBox3.Controls.Add(this.txtAPIKey);
             this.groupBox3.Controls.Add(this.lblBalanceAndTime);
             this.groupBox3.Location = new System.Drawing.Point(1104, 85);
             this.groupBox3.Name = "groupBox3";
@@ -624,6 +665,42 @@
             this.groupBox3.TabIndex = 17;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "User Information";
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(6, 63);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(64, 13);
+            this.label24.TabIndex = 22;
+            this.label24.Text = "API Secret :";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(6, 37);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(51, 13);
+            this.label23.TabIndex = 21;
+            this.label23.Text = "API Key :";
+            // 
+            // txtAPISecret
+            // 
+            this.txtAPISecret.Location = new System.Drawing.Point(75, 60);
+            this.txtAPISecret.Name = "txtAPISecret";
+            this.txtAPISecret.Size = new System.Drawing.Size(201, 20);
+            this.txtAPISecret.TabIndex = 20;
+            this.txtAPISecret.UseSystemPasswordChar = true;
+            this.txtAPISecret.TextChanged += new System.EventHandler(this.txtAPISecret_TextChanged);
+            // 
+            // txtAPIKey
+            // 
+            this.txtAPIKey.Location = new System.Drawing.Point(75, 34);
+            this.txtAPIKey.Name = "txtAPIKey";
+            this.txtAPIKey.Size = new System.Drawing.Size(201, 20);
+            this.txtAPIKey.TabIndex = 19;
+            this.txtAPIKey.UseSystemPasswordChar = true;
+            this.txtAPIKey.TextChanged += new System.EventHandler(this.txtAPIKey_TextChanged);
             // 
             // lblBalanceAndTime
             // 
@@ -857,47 +934,22 @@
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Open Orders";
             // 
-            // txtOrderPrice
+            // label21
             // 
-            this.txtOrderPrice.Enabled = false;
-            this.txtOrderPrice.Location = new System.Drawing.Point(75, 41);
-            this.txtOrderPrice.Name = "txtOrderPrice";
-            this.txtOrderPrice.Size = new System.Drawing.Size(63, 20);
-            this.txtOrderPrice.TabIndex = 1;
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(210, 25);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(37, 13);
+            this.label21.TabIndex = 27;
+            this.label21.Text = "Status";
             // 
-            // txtOrderSize
+            // txtOrderStatus
             // 
-            this.txtOrderSize.Enabled = false;
-            this.txtOrderSize.Location = new System.Drawing.Point(6, 41);
-            this.txtOrderSize.Name = "txtOrderSize";
-            this.txtOrderSize.Size = new System.Drawing.Size(63, 20);
-            this.txtOrderSize.TabIndex = 2;
-            // 
-            // txtOrderSide
-            // 
-            this.txtOrderSide.Enabled = false;
-            this.txtOrderSide.Location = new System.Drawing.Point(144, 41);
-            this.txtOrderSide.Name = "txtOrderSide";
-            this.txtOrderSide.Size = new System.Drawing.Size(63, 20);
-            this.txtOrderSide.TabIndex = 23;
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(6, 25);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(27, 13);
-            this.label18.TabIndex = 17;
-            this.label18.Text = "Size";
-            // 
-            // label19
-            // 
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(72, 25);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(31, 13);
-            this.label19.TabIndex = 24;
-            this.label19.Text = "Price";
+            this.txtOrderStatus.Enabled = false;
+            this.txtOrderStatus.Location = new System.Drawing.Point(213, 41);
+            this.txtOrderStatus.Name = "txtOrderStatus";
+            this.txtOrderStatus.Size = new System.Drawing.Size(63, 20);
+            this.txtOrderStatus.TabIndex = 26;
             // 
             // label20
             // 
@@ -908,22 +960,56 @@
             this.label20.TabIndex = 25;
             this.label20.Text = "Side";
             // 
-            // txtOrderStatus
+            // label19
             // 
-            this.txtOrderStatus.Enabled = false;
-            this.txtOrderStatus.Location = new System.Drawing.Point(213, 41);
-            this.txtOrderStatus.Name = "txtOrderStatus";
-            this.txtOrderStatus.Size = new System.Drawing.Size(63, 20);
-            this.txtOrderStatus.TabIndex = 26;
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(72, 25);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(31, 13);
+            this.label19.TabIndex = 24;
+            this.label19.Text = "Price";
             // 
-            // label21
+            // label18
             // 
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(210, 25);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(37, 13);
-            this.label21.TabIndex = 27;
-            this.label21.Text = "Status";
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(6, 25);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(27, 13);
+            this.label18.TabIndex = 17;
+            this.label18.Text = "Size";
+            // 
+            // txtOrderSide
+            // 
+            this.txtOrderSide.Enabled = false;
+            this.txtOrderSide.Location = new System.Drawing.Point(144, 41);
+            this.txtOrderSide.Name = "txtOrderSide";
+            this.txtOrderSide.Size = new System.Drawing.Size(63, 20);
+            this.txtOrderSide.TabIndex = 23;
+            // 
+            // txtOrderSize
+            // 
+            this.txtOrderSize.Enabled = false;
+            this.txtOrderSize.Location = new System.Drawing.Point(6, 41);
+            this.txtOrderSize.Name = "txtOrderSize";
+            this.txtOrderSize.Size = new System.Drawing.Size(63, 20);
+            this.txtOrderSize.TabIndex = 2;
+            // 
+            // txtOrderPrice
+            // 
+            this.txtOrderPrice.Enabled = false;
+            this.txtOrderPrice.Location = new System.Drawing.Point(75, 41);
+            this.txtOrderPrice.Name = "txtOrderPrice";
+            this.txtOrderPrice.Size = new System.Drawing.Size(63, 20);
+            this.txtOrderPrice.TabIndex = 1;
+            // 
+            // lblApiValidity
+            // 
+            this.lblApiValidity.AutoSize = true;
+            this.lblApiValidity.Location = new System.Drawing.Point(6, 84);
+            this.lblApiValidity.Name = "lblApiValidity";
+            this.lblApiValidity.Size = new System.Drawing.Size(60, 13);
+            this.lblApiValidity.TabIndex = 23;
+            this.lblApiValidity.Text = "API Validity";
             // 
             // Form1
             // 
@@ -963,6 +1049,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifference)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPercentToTrade)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPercentEarn)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudAutoQuantity)).EndInit();
@@ -1052,6 +1139,13 @@
         private System.Windows.Forms.TextBox txtOrderPrice;
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.TextBox txtOrderStatus;
+        private System.Windows.Forms.NumericUpDown nupRSIDifference;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.TextBox txtAPISecret;
+        private System.Windows.Forms.TextBox txtAPIKey;
+        private System.Windows.Forms.Label lblApiValidity;
     }
 }
 

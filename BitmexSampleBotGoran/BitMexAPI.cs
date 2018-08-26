@@ -459,13 +459,65 @@ namespace BitMEX
                     }
                     catch (Exception ex2)
                     {
-                        param["symbol"] = symbol;
-                        param["count"] = count.ToString();
-                        param["reverse"] = true.ToString();
-                        param["partial"] = false.ToString();
-                        param["binSize"] = size;
-                        string res = Query("GET", "/trade/bucketed", param);
-                        return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                        try
+                        {
+                            param["symbol"] = symbol;
+                            param["count"] = count.ToString();
+                            param["reverse"] = true.ToString();
+                            param["partial"] = false.ToString();
+                            param["binSize"] = size;
+                            string res = Query("GET", "/trade/bucketed", param);
+                            return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                        }
+                        catch (Exception ex3)
+                        {
+                            try
+                            {
+                                param["symbol"] = symbol;
+                                param["count"] = count.ToString();
+                                param["reverse"] = true.ToString();
+                                param["partial"] = false.ToString();
+                                param["binSize"] = size;
+                                string res = Query("GET", "/trade/bucketed", param);
+                                return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                            }
+                            catch (Exception ex4)
+                            {
+                                try
+                                {
+                                    param["symbol"] = symbol;
+                                    param["count"] = count.ToString();
+                                    param["reverse"] = true.ToString();
+                                    param["partial"] = false.ToString();
+                                    param["binSize"] = size;
+                                    string res = Query("GET", "/trade/bucketed", param);
+                                    return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                                }
+                                catch (Exception ex5)
+                                {
+                                    try
+                                    {
+                                        param["symbol"] = symbol;
+                                        param["count"] = count.ToString();
+                                        param["reverse"] = true.ToString();
+                                        param["partial"] = false.ToString();
+                                        param["binSize"] = size;
+                                        string res = Query("GET", "/trade/bucketed", param);
+                                        return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                                    }
+                                    catch (Exception ex6)
+                                    {                                        
+                                        param["symbol"] = symbol;
+                                        param["count"] = count.ToString();
+                                        param["reverse"] = true.ToString();
+                                        param["partial"] = false.ToString();
+                                        param["binSize"] = size;
+                                        string res = Query("GET", "/trade/bucketed", param);
+                                        return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -654,6 +706,25 @@ namespace BitMEX
         }
 
 
+        // Getting Account Balance
+        public decimal GetAccountBalance()
+        {
+            var param = new Dictionary<string, string>();
+            param["currency"] = "XBt";
+            string res = Query("GET", "/user/margin", param, true);
+            if (res.Contains("error"))
+            {
+                return -1;
+            }
+            else
+            {
+                return Convert.ToDecimal(JsonConvert.DeserializeObject<Margin>(res).UsefulBalance); // useful balance is the balance with full decimal places.
+                // default wallet balance doesn't show the decimal places like it should.
+            }
+
+        }
+
+
 
         #region RateLimiter
 
@@ -676,6 +747,18 @@ namespace BitMEX
     }
 
     // Working Classes
+
+    public class Margin // For account balance
+    {
+        public decimal? WalletBalance { get; set; }
+        public decimal? AvailableMargin { get; set; }
+        public decimal? UsefulBalance
+        {
+            get { return (WalletBalance / 100000000) ?? 0; }
+        }
+    }
+
+
     public class OrderBook
     {
         public string Side { get; set; }

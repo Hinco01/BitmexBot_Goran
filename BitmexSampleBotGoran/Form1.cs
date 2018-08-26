@@ -15,21 +15,24 @@ using System.Windows.Forms;
 using WebSocketSharp;
 using System.Globalization;
 
+// feees in Bitmex  Total Fees = 100 [leverage] x $1,000 [Margin] x 0.00075 [Rate for Market order] x 2 [Entry + Exit] = $150
+// 5 * real btc * 0,0005 = limit + market + 5x
+
 namespace BitmexSampleBotGoran
 {
     public partial class Form1 : Form
     {
 
-        private static string TestbitmexKey = "test";
-        private static string TestbitmexSecret = "test";
+        //private static string TestbitmexKey = "test";
+        //private static string TestbitmexSecret = "test";
         private static string TestbitmexDomain = "https://testnet.bitmex.com";
 
-        private static string bitmexKey = "test";
-        private static string bitmexSecret = "test";
+        //private static string bitmexKey = "test";
+        //private static string bitmexSecret = "test";
         private static string bitmexDomain = "https://www.bitmex.com";
 
-        string APIKey = "";
-        string APISecret = "";
+        string WebSocketAPIKey = "";
+        string WebSocketAPISecret = "";
 
         bool FirstINITNET = true;
         bool FirstINTICNDL = true;
@@ -97,14 +100,17 @@ namespace BitmexSampleBotGoran
         String OBBSellSideValue;
 
         decimal Balance = 0;
+        decimal WalletBalance = 0;
 
         int Dblcheck = 0;
         int DblcheckSell = 0;
 
+        bool APIValid = false;
+
         public Form1()
         {
             InitializeComponent();
-            InitializeDropdowns();            
+            InitializeDropdownsAndSettings();            
             InitializeAPI();
             InitializeCandleArea();            
 
@@ -113,13 +119,38 @@ namespace BitmexSampleBotGoran
             InitializeWalletWebSocket(true);            
         }
 
-        private void InitializeDropdowns()
+        private void InitializeDropdownsAndSettings()
         {            
             ddNetwork.SelectedIndex = 1;
             ddOrderType.SelectedIndex = 1;
             ddlCandleTimes.SelectedIndex = 1;
             ddlAutoOrderType.SelectedIndex = 1;
+
+            LoadAPISettings();
         }
+
+        private void LoadAPISettings()
+        {
+            switch (ddNetwork.SelectedItem.ToString())
+            {
+                case "TestNet":
+                    txtAPIKey.Text = Properties.Settings.Default.TestAPIKey;
+                    txtAPISecret.Text = Properties.Settings.Default.TestAPISecret;
+
+                    WebSocketAPIKey = Properties.Settings.Default.TestAPIKey;
+                    WebSocketAPISecret = Properties.Settings.Default.TestAPISecret;
+
+                    break;
+                case "RealNet":
+                    txtAPIKey.Text = Properties.Settings.Default.APIKey;
+                    txtAPISecret.Text = Properties.Settings.Default.APISecret;
+
+                    WebSocketAPIKey = Properties.Settings.Default.APIKey;
+                    WebSocketAPISecret = Properties.Settings.Default.APISecret;
+                    break;
+            }
+        }
+
 
         private void InitializeCandleArea ()
         {
@@ -130,20 +161,55 @@ namespace BitmexSampleBotGoran
         {
             switch(ddNetwork.SelectedItem.ToString())
             {
+                //case "TestNet":
+                //    bitmex = new BitMEXApi(TestbitmexKey, TestbitmexSecret, TestbitmexDomain);
+                //    APIKey = TestbitmexKey;
+                //    APISecret = TestbitmexSecret;
+                //    break;
+                //case "RealNet":
+                //    bitmex = new BitMEXApi(bitmexKey, bitmexSecret, bitmexDomain);
+                //    APIKey = bitmexKey;
+                //    APISecret = bitmexSecret;
+                //    break;
+
                 case "TestNet":
-                    bitmex = new BitMEXApi(TestbitmexKey, TestbitmexSecret, TestbitmexDomain);
-                    APIKey = TestbitmexKey;
-                    APISecret = TestbitmexSecret;
+                    bitmex = new BitMEXApi(txtAPIKey.Text, txtAPISecret.Text, TestbitmexDomain);
                     break;
                 case "RealNet":
-                    bitmex = new BitMEXApi(bitmexKey, bitmexSecret, bitmexDomain);
-                    APIKey = bitmexKey;
-                    APISecret = bitmexSecret;
+                    bitmex = new BitMEXApi(txtAPIKey.Text, txtAPISecret.Text, bitmexDomain);
                     break;
             }
             Heartbeat.Start();
             // We must do this in case symbols are different on test and real net
-            InitializeSymbolInformation();            
+            InitializeSymbolInformation();
+            GetAPIValidity();
+        }
+
+        private void GetAPIValidity()
+        {
+            try // Code is simple, if we get our account balance without an error the API is valid, if not, it will throw an error and API will be marked not valid.
+            {
+
+                WalletBalance = bitmex.GetAccountBalance();
+                if (WalletBalance >= 0)
+                {
+                    APIValid = true;
+                    lblApiValidity.Text = "API keys are valid";
+                    
+                }
+                else
+                {
+                    APIValid = false;
+                    lblApiValidity.Text = "API keys are invalid";
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                APIValid = false;
+                lblApiValidity.Text = "API keys are invalid";
+                
+            }
         }
 
         private void InitializeSymbolInformation()
@@ -432,7 +498,7 @@ namespace BitmexSampleBotGoran
 
 
                         }
-                        else if ((string)Message["table"] == "orderBookL2")
+                        else if ((string)Message["table"] == "tradeBin5m")
                         {
 
                         }
@@ -447,21 +513,27 @@ namespace BitmexSampleBotGoran
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    //MessageBox.Show(ex.Message);
                 }
-            };            
+            };
+            ws.OnError += (sender, e) =>
+            {
+            };
+
             ws.Connect();
+
             // Assamble our price dictionary
             //foreach (Instrument i in ActiveInstruments)
             //{
             //    ws.Send("{\"op\": \"subscribe\", \"args\": [\"trade:" + i.Symbol + "\"]}");
             //}
             //ws.Send("{\"op\": \"subscribe\", \"args\": [\"trade:" + ActiveInstrument.Symbol + "\"]}");
-
-            string APIExpires = bitmex.GetExpiresArg();
-            string Signature = bitmex.GetWebSocketSignatureString(APISecret, APIExpires);
-            ws.Send("{\"op\": \"authKeyExpires\", \"args\": [\"" + APIKey + "\", " + APIExpires + ", \"" + Signature + "\"]}");
-            
+            if (APIValid == true)
+            {
+                string APIExpires = bitmex.GetExpiresArg();
+                string Signature = bitmex.GetWebSocketSignatureString(WebSocketAPISecret, APIExpires);
+                ws.Send("{\"op\": \"authKeyExpires\", \"args\": [\"" + WebSocketAPIKey + "\", " + APIExpires + ", \"" + Signature + "\"]}");
+            }
         }
 
 
@@ -481,12 +553,12 @@ namespace BitmexSampleBotGoran
 
                 ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"trade:" + ActiveInstrument.Symbol + "\"]}");
 
-                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"orderBookL2:" + ActiveInstrument.Symbol + "\"]}");
+                //ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"tradeBin5m:" + ActiveInstrument.Symbol + "\"]}");
 
                 ActiveInstrument = bitmex.GetInstrument(((Instrument)ddlSymbol.SelectedItem).Symbol)[0];
             }
 
-            ws.Send("{\"op\": \"subscribe\", \"args\": [\"orderBookL2:" + ActiveInstrument.Symbol + "\"]}");
+            //ws.Send("{\"op\": \"subscribe\", \"args\": [\"tradeBin5m:" + ActiveInstrument.Symbol + "\"]}");
             ws.Send("{\"op\": \"subscribe\", \"args\": [\"order:" + ActiveInstrument.Symbol + "\"]}");
             // Subscribe to new orderbook
             ws.Send("{\"op\": \"subscribe\", \"args\": [\"orderBook10:" + ActiveInstrument.Symbol + "\"]}");
@@ -613,6 +685,7 @@ namespace BitmexSampleBotGoran
         {
             if (FirstINITNET != true)
             {
+                LoadAPISettings();
                 InitializeAPI();
                 InitializeWebSocket();
                 InitializeSymbolSpecificData();
@@ -1147,20 +1220,20 @@ namespace BitmexSampleBotGoran
                 // MACD Example
                 //if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine <= Candles[1].MACDSignalLine) && (Candles[0].Close < Candles[0].BBUpper)) // Most recently closed candle crossed over up
 
-                if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= 50)) 
+                if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
                 {
                     // Did the last full candle have MACDLine cross above MACDSignalLine?  We'll need to buy now.
                     Dblcheck++;
                     DblcheckSell = 0;
-                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && Dblcheck >= 12)
+                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && Dblcheck >= 16)
                     {
                         Mode = "Buy";
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && Dblcheck >= 60)
+                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && Dblcheck >= 80)
                     {
                         Mode = "Buy";
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && Dblcheck >= 720)
+                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && Dblcheck >= 960)
                     {
                         Mode = "Buy";
                     }
@@ -1170,7 +1243,7 @@ namespace BitmexSampleBotGoran
                     }
 
                 }
-                else if ((Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1) && (Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 2) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= 55))
+                else if ((Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1) && (Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 2) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
                 {
                     Mode = "Buy";
                     Dblcheck = 0;
@@ -1240,21 +1313,21 @@ namespace BitmexSampleBotGoran
 
                 //if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine >= Candles[1].MACDSignalLine) && (Candles[0].Close > Candles[0].BBLower))
 
-                if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= 50))
+                if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
                 {
                     // Did the last full candle have MA1 cross below MA2?  We'll need to sell now
                     DblcheckSell++;
                     Dblcheck = 0;
                     
-                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && DblcheckSell >= 12)
+                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && DblcheckSell >= 16)
                     {
                         Mode = "Sell";
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && DblcheckSell >= 60)
+                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && DblcheckSell >= 80)
                     {
                         Mode = "Sell";
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && DblcheckSell >= 720)
+                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && DblcheckSell >= 960)
                     {
                         Mode = "Sell";
                     }
@@ -1263,7 +1336,7 @@ namespace BitmexSampleBotGoran
                         Mode = "Wait";
                     }
                 }
-                else if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 2) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= 45))
+                else if ((Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 1) && (Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 2) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
                 {
                     Mode = "Sell";
                     DblcheckSell = 0;
@@ -2148,6 +2221,62 @@ namespace BitmexSampleBotGoran
         private void nudPercentToTrade_ValueChanged(object sender, EventArgs e)
         {
             AutoQuantityCheck();
+        }
+
+        private void txtAPIKey_TextChanged(object sender, EventArgs e)
+        {
+            switch (ddNetwork.SelectedItem.ToString())
+            {
+                case "TestNet":
+                    Properties.Settings.Default.TestAPIKey = txtAPIKey.Text;
+
+                    WebSocketAPIKey = Properties.Settings.Default.TestAPIKey;
+                    
+                    break;
+                case "RealNet":
+                    Properties.Settings.Default.APIKey = txtAPIKey.Text;
+
+                    WebSocketAPIKey = Properties.Settings.Default.APIKey;
+                    
+                    break;
+            }
+            SaveSettings();
+            InitializeAPI();
+            if (ws != null)
+            {
+                ws.Close(); // Make sure our websocket is closed.
+            }
+            InitializeWebSocket();
+            InitializeSymbolSpecificData();
+            InitializeWalletWebSocket();
+        }
+
+        private void txtAPISecret_TextChanged(object sender, EventArgs e)
+        {
+            switch (ddNetwork.SelectedItem.ToString())
+            {
+                case "TestNet":
+                    Properties.Settings.Default.TestAPISecret = txtAPISecret.Text;
+
+                    WebSocketAPISecret = Properties.Settings.Default.TestAPISecret;                    
+                    
+                    break;
+                case "RealNet":
+                    Properties.Settings.Default.APISecret = txtAPISecret.Text;
+
+                    WebSocketAPISecret = Properties.Settings.Default.APISecret;
+                    
+                    break;
+            }
+            SaveSettings();
+            InitializeAPI();
+            if (ws != null)
+            {
+                ws.Close(); // Make sure our websocket is closed.
+            }
+            InitializeWebSocket();
+            InitializeSymbolSpecificData();
+            InitializeWalletWebSocket();
         }
     }
 }

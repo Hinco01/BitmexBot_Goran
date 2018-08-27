@@ -43,7 +43,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lblRetry = new System.Windows.Forms.Label();
-            this.lblSettingsWebsocketInfo = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.nudMA2 = new System.Windows.Forms.NumericUpDown();
@@ -73,6 +72,7 @@
             this.tmrClientUpdates = new System.Windows.Forms.Timer(this.components);
             this.Heartbeat = new System.Windows.Forms.Timer(this.components);
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.lblApiValidity = new System.Windows.Forms.Label();
             this.label24 = new System.Windows.Forms.Label();
             this.label23 = new System.Windows.Forms.Label();
             this.txtAPISecret = new System.Windows.Forms.TextBox();
@@ -107,7 +107,7 @@
             this.txtOrderSide = new System.Windows.Forms.TextBox();
             this.txtOrderSize = new System.Windows.Forms.TextBox();
             this.txtOrderPrice = new System.Windows.Forms.TextBox();
-            this.lblApiValidity = new System.Windows.Forms.Label();
+            this.txtSettingsWebsocketInfo = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.nupQty)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA2)).BeginInit();
@@ -263,8 +263,8 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.txtSettingsWebsocketInfo);
             this.groupBox1.Controls.Add(this.lblRetry);
-            this.groupBox1.Controls.Add(this.lblSettingsWebsocketInfo);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.nudMA2);
@@ -287,15 +287,6 @@
             this.lblRetry.Size = new System.Drawing.Size(38, 13);
             this.lblRetry.TabIndex = 11;
             this.lblRetry.Text = "Retry: ";
-            // 
-            // lblSettingsWebsocketInfo
-            // 
-            this.lblSettingsWebsocketInfo.AutoSize = true;
-            this.lblSettingsWebsocketInfo.Location = new System.Drawing.Point(822, 23);
-            this.lblSettingsWebsocketInfo.Name = "lblSettingsWebsocketInfo";
-            this.lblSettingsWebsocketInfo.Size = new System.Drawing.Size(89, 13);
-            this.lblSettingsWebsocketInfo.TabIndex = 6;
-            this.lblSettingsWebsocketInfo.Text = "Websocket Info: ";
             // 
             // label5
             // 
@@ -666,6 +657,15 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "User Information";
             // 
+            // lblApiValidity
+            // 
+            this.lblApiValidity.AutoSize = true;
+            this.lblApiValidity.Location = new System.Drawing.Point(6, 84);
+            this.lblApiValidity.Name = "lblApiValidity";
+            this.lblApiValidity.Size = new System.Drawing.Size(60, 13);
+            this.lblApiValidity.TabIndex = 23;
+            this.lblApiValidity.Text = "API Validity";
+            // 
             // label24
             // 
             this.label24.AutoSize = true;
@@ -1002,14 +1002,13 @@
             this.txtOrderPrice.Size = new System.Drawing.Size(63, 20);
             this.txtOrderPrice.TabIndex = 1;
             // 
-            // lblApiValidity
+            // txtSettingsWebsocketInfo
             // 
-            this.lblApiValidity.AutoSize = true;
-            this.lblApiValidity.Location = new System.Drawing.Point(6, 84);
-            this.lblApiValidity.Name = "lblApiValidity";
-            this.lblApiValidity.Size = new System.Drawing.Size(60, 13);
-            this.lblApiValidity.TabIndex = 23;
-            this.lblApiValidity.Text = "API Validity";
+            this.txtSettingsWebsocketInfo.Enabled = false;
+            this.txtSettingsWebsocketInfo.Location = new System.Drawing.Point(825, 18);
+            this.txtSettingsWebsocketInfo.Name = "txtSettingsWebsocketInfo";
+            this.txtSettingsWebsocketInfo.Size = new System.Drawing.Size(543, 20);
+            this.txtSettingsWebsocketInfo.TabIndex = 20;
             // 
             // Form1
             // 
@@ -1102,7 +1101,6 @@
         private System.Windows.Forms.NumericUpDown nudCurrentPrice;
         private System.Windows.Forms.Timer tmrClientUpdates;
         private System.Windows.Forms.Timer Heartbeat;
-        private System.Windows.Forms.Label lblSettingsWebsocketInfo;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Label lblBalanceAndTime;
         private System.Windows.Forms.CheckBox chkOverloadRetry;
@@ -1146,6 +1144,7 @@
         private System.Windows.Forms.TextBox txtAPISecret;
         private System.Windows.Forms.TextBox txtAPIKey;
         private System.Windows.Forms.Label lblApiValidity;
+        private System.Windows.Forms.TextBox txtSettingsWebsocketInfo;
     }
 }
 

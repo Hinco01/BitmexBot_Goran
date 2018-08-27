@@ -208,10 +208,41 @@ namespace BitMEX
         public List<OrderBook> GetOrderBook(string symbol, int depth)
         {
             var param = new Dictionary<string, string>();
-            param["symbol"] = symbol;
-            param["depth"] = depth.ToString();
-            string res = Query("GET", "/orderBook/L2", param);
-            return JsonConvert.DeserializeObject<List<OrderBook>>(res);
+
+            try
+            {
+                param["symbol"] = symbol;
+                param["depth"] = depth.ToString();
+                string res = Query("GET", "/orderBook/L2", param);
+                return JsonConvert.DeserializeObject<List<OrderBook>>(res);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    param["symbol"] = symbol;
+                    param["depth"] = depth.ToString();
+                    string res = Query("GET", "/orderBook/L2", param);
+                    return JsonConvert.DeserializeObject<List<OrderBook>>(res);
+                }
+                catch (Exception ex1)
+                {
+                    try
+                    {
+                        param["symbol"] = symbol;
+                        param["depth"] = depth.ToString();
+                        string res = Query("GET", "/orderBook/L2", param);
+                        return JsonConvert.DeserializeObject<List<OrderBook>>(res);
+                    }
+                    catch (Exception ex2)
+                    {
+                        param["symbol"] = symbol;
+                        param["depth"] = depth.ToString();
+                        string res = Query("GET", "/orderBook/L2", param);
+                        return JsonConvert.DeserializeObject<List<OrderBook>>(res);
+                    }
+                }
+            }
 
         }
 
@@ -325,44 +356,237 @@ namespace BitMEX
 
         public List<Instrument> GetActiveInstruments()
         {
-            string res = Query("GET", "/instrument/active");
-            return JsonConvert.DeserializeObject<List<Instrument>>(res);
+            try
+            {
+                string res = Query("GET", "/instrument/active");
+                return JsonConvert.DeserializeObject<List<Instrument>>(res);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    string res = Query("GET", "/instrument/active");
+                    return JsonConvert.DeserializeObject<List<Instrument>>(res);
+                }
+                catch (Exception ex1)
+                {
+                    try
+                    {
+                        string res = Query("GET", "/instrument/active");
+                        return JsonConvert.DeserializeObject<List<Instrument>>(res);
+                    }
+                    catch (Exception ex2)
+                    {
+                        string res = Query("GET", "/instrument/active");
+                        return JsonConvert.DeserializeObject<List<Instrument>>(res);
+                    }
+                }
+            }
         }
 
         public List<Instrument> GetInstrument(string symbol)
         {
             var param = new Dictionary<string, string>();
-            param["symbol"] = symbol;
-            string res = Query("GET", "/instrument", param);
-            return JsonConvert.DeserializeObject<List<Instrument>>(res);
+
+            try
+            {
+                param["symbol"] = symbol;
+                string res = Query("GET", "/instrument", param);
+                return JsonConvert.DeserializeObject<List<Instrument>>(res);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    param["symbol"] = symbol;
+                    string res = Query("GET", "/instrument", param);
+                    return JsonConvert.DeserializeObject<List<Instrument>>(res);
+                }
+                catch (Exception ex1)
+                {
+                    try
+                    {
+                        param["symbol"] = symbol;
+                        string res = Query("GET", "/instrument", param);
+                        return JsonConvert.DeserializeObject<List<Instrument>>(res);
+                    }
+                    catch (Exception ex2)
+                    {
+                        param["symbol"] = symbol;
+                        string res = Query("GET", "/instrument", param);
+                        return JsonConvert.DeserializeObject<List<Instrument>>(res);
+                    }
+                }
+            }
         }
 
         public List<Candle> GetCandleHistory(string symbol, int count, string size)
         {
             var param = new Dictionary<string, string>();
-            param["symbol"] = symbol;
-            param["count"] = count.ToString();
-            param["reverse"] = true.ToString();
-            param["partial"] = false.ToString();
-            param["binSize"] = size;
-            string res = Query("GET", "/trade/bucketed", param);
-            return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+            try
+            {                
+                param["symbol"] = symbol;
+                param["count"] = count.ToString();
+                param["reverse"] = true.ToString();
+                param["partial"] = false.ToString();
+                param["binSize"] = size;
+                string res = Query("GET", "/trade/bucketed", param);
+                return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    param["symbol"] = symbol;
+                    param["count"] = count.ToString();
+                    param["reverse"] = true.ToString();
+                    param["partial"] = false.ToString();
+                    param["binSize"] = size;
+                    string res = Query("GET", "/trade/bucketed", param);
+                    return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                }
+                catch (Exception ex1)
+                {
+                    try
+                    {
+                        param["symbol"] = symbol;
+                        param["count"] = count.ToString();
+                        param["reverse"] = true.ToString();
+                        param["partial"] = false.ToString();
+                        param["binSize"] = size;
+                        string res = Query("GET", "/trade/bucketed", param);
+                        return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                    }
+                    catch (Exception ex2)
+                    {
+                        try
+                        {
+                            param["symbol"] = symbol;
+                            param["count"] = count.ToString();
+                            param["reverse"] = true.ToString();
+                            param["partial"] = false.ToString();
+                            param["binSize"] = size;
+                            string res = Query("GET", "/trade/bucketed", param);
+                            return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                        }
+                        catch (Exception ex3)
+                        {
+                            try
+                            {
+                                param["symbol"] = symbol;
+                                param["count"] = count.ToString();
+                                param["reverse"] = true.ToString();
+                                param["partial"] = false.ToString();
+                                param["binSize"] = size;
+                                string res = Query("GET", "/trade/bucketed", param);
+                                return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                            }
+                            catch (Exception ex4)
+                            {
+                                try
+                                {
+                                    param["symbol"] = symbol;
+                                    param["count"] = count.ToString();
+                                    param["reverse"] = true.ToString();
+                                    param["partial"] = false.ToString();
+                                    param["binSize"] = size;
+                                    string res = Query("GET", "/trade/bucketed", param);
+                                    return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                                }
+                                catch (Exception ex5)
+                                {
+                                    try
+                                    {
+                                        param["symbol"] = symbol;
+                                        param["count"] = count.ToString();
+                                        param["reverse"] = true.ToString();
+                                        param["partial"] = false.ToString();
+                                        param["binSize"] = size;
+                                        string res = Query("GET", "/trade/bucketed", param);
+                                        return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                                    }
+                                    catch (Exception ex6)
+                                    {                                        
+                                        param["symbol"] = symbol;
+                                        param["count"] = count.ToString();
+                                        param["reverse"] = true.ToString();
+                                        param["partial"] = false.ToString();
+                                        param["binSize"] = size;
+                                        string res = Query("GET", "/trade/bucketed", param);
+                                        return JsonConvert.DeserializeObject<List<Candle>>(res).OrderByDescending(a => a.TimeStamp).ToList();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public List<Position> GetOpenPositions(string symbol)
         {
             var param = new Dictionary<string, string>();
-            string res = Query("GET", "/position", param, true);
-            return JsonConvert.DeserializeObject<List<Position>>(res).Where(a => a.Symbol == symbol && a.IsOpen == true).OrderByDescending(a => a.TimeStamp).ToList();
+
+            try
+            {
+                string res = Query("GET", "/position", param, true);
+                return JsonConvert.DeserializeObject<List<Position>>(res).Where(a => a.Symbol == symbol && a.IsOpen == true).OrderByDescending(a => a.TimeStamp).ToList();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    string res = Query("GET", "/position", param, true);
+                    return JsonConvert.DeserializeObject<List<Position>>(res).Where(a => a.Symbol == symbol && a.IsOpen == true).OrderByDescending(a => a.TimeStamp).ToList();
+                }
+                catch (Exception ex1)
+                {
+                    try
+                    {
+                        string res = Query("GET", "/position", param, true);
+                        return JsonConvert.DeserializeObject<List<Position>>(res).Where(a => a.Symbol == symbol && a.IsOpen == true).OrderByDescending(a => a.TimeStamp).ToList();
+                    }
+                    catch (Exception ex2)
+                    {
+                        string res = Query("GET", "/position", param, true);
+                        return JsonConvert.DeserializeObject<List<Position>>(res).Where(a => a.Symbol == symbol && a.IsOpen == true).OrderByDescending(a => a.TimeStamp).ToList();
+                    }
+                }
+            }
         }
 
         public List<Order> GetOpenOrders(string symbol)
         {
-            var param = new Dictionary<string, string>();
-            param["symbol"] = symbol;
-            param["reverse"] = true.ToString();
-            string res = Query("GET", "/order", param, true);
-            return JsonConvert.DeserializeObject<List<Order>>(res).Where(a => a.OrdStatus == "New" || a.OrdStatus == "PartiallyFilled").OrderByDescending(a => a.TimeStamp).ToList();
+           
+                var param = new Dictionary<string, string>();
+                param["symbol"] = symbol;
+                param["reverse"] = true.ToString();                
+            try
+            {
+                string res = Query("GET", "/order", param, true);
+                return JsonConvert.DeserializeObject<List<Order>>(res).Where(a => a.OrdStatus == "New" || a.OrdStatus == "PartiallyFilled").OrderByDescending(a => a.TimeStamp).ToList();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    string res = Query("GET", "/order", param, true);
+                    return JsonConvert.DeserializeObject<List<Order>>(res).Where(a => a.OrdStatus == "New" || a.OrdStatus == "PartiallyFilled").OrderByDescending(a => a.TimeStamp).ToList();
+                }
+                catch (Exception ex1)
+                {
+                    try
+                    {
+                        string res = Query("GET", "/order", param, true);
+                        return JsonConvert.DeserializeObject<List<Order>>(res).Where(a => a.OrdStatus == "New" || a.OrdStatus == "PartiallyFilled").OrderByDescending(a => a.TimeStamp).ToList();
+                    }
+                    catch (Exception ex2)
+                    {
+                        string res = Query("GET", "/order", param, true);
+                        return JsonConvert.DeserializeObject<List<Order>>(res).Where(a => a.OrdStatus == "New" || a.OrdStatus == "PartiallyFilled").OrderByDescending(a => a.TimeStamp).ToList();
+                    }
+                }
+            }
         }
 
         public string EditOrderPrice(string OrderId, decimal Price)
@@ -418,6 +642,89 @@ namespace BitMEX
             return att;
         }
 
+        // Market Stops
+        public string MarketStop(string Symbol, string Side, decimal StopPrice, int Quantity, bool ReduceOnly, string timeframe, string text = "BMBStopMarket")
+        {
+            var param = new Dictionary<string, string>();
+            param["symbol"] = Symbol;
+            param["side"] = Side;
+            param["orderQty"] = Quantity.ToString();
+            param["stopPx"] = StopPrice.ToString().Replace(",", ".");
+            param["ordType"] = "Stop";
+            param["text"] = text + timeframe;
+            if (ReduceOnly)
+            {
+                param["execInst"] = "ReduceOnly,LastPrice"; // Implies reduce position
+            }
+            else
+            {
+                param["execInst"] = "LastPrice";
+            }
+            //return Query("POST", "/order", param, true);
+
+            string res = Query("POST", "/order", param, true);
+            int RetryAttemptCount = 0;
+            int MaxRetries = RetryAttempts(res);
+            while (res.Contains("error") && RetryAttemptCount < MaxRetries)
+            {
+                errors.Add(res);
+                Thread.Sleep(500); // Force app to wait 500ms
+                res = Query("POST", "/order", param, true);
+                RetryAttemptCount++;
+                if (RetryAttemptCount == MaxRetries)
+                {
+                    errors.Add("Max rety attempts of " + MaxRetries.ToString() + " reached.");
+                    break;
+                }
+            }
+            return res;
+        }
+
+        public string EditStopOrderPrice(string OrderId, decimal StopPrice)
+        {
+            var param = new Dictionary<string, string>();
+            param["orderID"] = OrderId;
+            param["stopPx"] = StopPrice.ToString().Replace(",", ".");
+            //return Query("PUT", "/order", param, true, true);
+
+            string res = Query("PUT", "/order", param, true, true);
+            int RetryAttemptCount = 0;
+            int MaxRetries = RetryAttempts(res);
+            while (res.Contains("error") && RetryAttemptCount < MaxRetries)
+            {
+                errors.Add(res);
+                Thread.Sleep(500); // Force app to wait 500ms
+                res = Query("PUT", "/order", param, true, true);
+                RetryAttemptCount++;
+                if (RetryAttemptCount == MaxRetries)
+                {
+                    errors.Add("Max rety attempts of " + MaxRetries.ToString() + " reached.");
+                    break;
+                }
+            }
+            return res;
+        }
+
+
+        // Getting Account Balance
+        public decimal GetAccountBalance()
+        {
+            var param = new Dictionary<string, string>();
+            param["currency"] = "XBt";
+            string res = Query("GET", "/user/margin", param, true);
+            if (res.Contains("error"))
+            {
+                return -1;
+            }
+            else
+            {
+                return Convert.ToDecimal(JsonConvert.DeserializeObject<Margin>(res).UsefulBalance); // useful balance is the balance with full decimal places.
+                // default wallet balance doesn't show the decimal places like it should.
+            }
+
+        }
+
+
 
         #region RateLimiter
 
@@ -440,6 +747,18 @@ namespace BitMEX
     }
 
     // Working Classes
+
+    public class Margin // For account balance
+    {
+        public decimal? WalletBalance { get; set; }
+        public decimal? AvailableMargin { get; set; }
+        public decimal? UsefulBalance
+        {
+            get { return (WalletBalance / 100000000) ?? 0; }
+        }
+    }
+
+
     public class OrderBook
     {
         public string Side { get; set; }
@@ -467,7 +786,11 @@ namespace BitMEX
         public double? Low { get; set; }
         public double? Volume { get; set; }
         public int Trades { get; set; }
-        public int PCC { get; set; }  // Previous Candle Count
+        public int PCC { get; set; }  // Previous Candle Count     
+        public string TDUoD { get; set; }
+        public int TDSeq { get; set; }
+        public double? MACDHistorgram { get; set; }
+        public double? RSI { get; set; } // For RSI
         public double? MA1 { get; set; }
         public double? MA2 { get; set; }
         public double? BBUpper { get; set; }
@@ -478,11 +801,37 @@ namespace BitMEX
         public double? EMA3 { get; set; }
         public double? MACDLine { get; set; }
         public double? MACDSignalLine { get; set; }
-        public double? MACDHistorgram { get; set; }
+        //public double? MACDHistorgram { get; set; }
+        public double? STOCHK { get; set; }
+        public double? STOCHD { get; set; }
+        public double? TR { get; set; }
+        public double? ATR1 { get; set; }
+        public double? ATR2 { get; set; }
+        public void SetTR(double? PreviousClose)
+        {
+            List<double?> TRs = new List<double?>();
 
+            TRs.Add(High - Low);
+            TRs.Add(Convert.ToDouble(Math.Abs(Convert.ToDecimal(High - PreviousClose))));
+            TRs.Add(Convert.ToDouble(Math.Abs(Convert.ToDecimal(Low - PreviousClose))));
+
+            TR = TRs.Max();            
+        }
+
+        public double? GainOrLoss // For RSI
+        {
+            get { return (Close - Open) ?? 0; } // 0 if null
+        }
+        public double? RS { get; set; } // For RSI
+        //public double? RSI { get; set; } // For RSI
+        public double? AVGGain { get; set; } // For RSI
+        public double? AVGLoss { get; set; } // For RSI
     }
 
-    public class Position
+
+
+
+        public class Position
     {
         public DateTime TimeStamp { get; set; }
         public decimal? Leverage { get; set; }
@@ -492,10 +841,36 @@ namespace BitMEX
         public decimal? MarkPrice { get; set; }
         public decimal? UnrealisedPnl { get; set; }
         public decimal? UnrealisedPnlPcnt { get; set; }
+        public decimal? UnrealisedRoePcnt { get; set; }
         public decimal? AvgEntryPrice { get; set; }
         public decimal? BreakEvenPrice { get; set; }
         public decimal? LiquidationPrice { get; set; }
+        public decimal? RealizedPnl { get; set; }
+        public decimal? HighestPriceSinceOpen { get; set; }
+        public decimal? LowestPriceSinceOpen { get; set; }
+        public decimal? TrailingStopPrice { get; set; }
+        public decimal? OpenOrderBuyQty { get; set; }
+        public decimal? OpenOrderBuyCost { get; set; }
+        public decimal? OpenOrderSellQty { get; set; }
+        public decimal? OpenOrderSellCost { get; set; }
+
+
         public string Symbol { get; set; }
+
+        public decimal? UsefulUnrealisedPnl
+        {
+            get
+            {
+                if (UnrealisedPnl != null)
+                {
+                    return Math.Round(((decimal)UnrealisedPnl / 100000000), 4);
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
     }
 
     public class Order
@@ -506,8 +881,65 @@ namespace BitMEX
         public string OrdType { get; set; }
         public string OrderId { get; set; }
         public string Side { get; set; }
-        public double? Price { get; set; }
+        public decimal? Price { get; set; }
         public int? OrderQty { get; set; }
         public int? DisplayQty { get; set; }
+        public bool? WorkingIndicator { get; set; }
+        public decimal? StopPx { get; set; }
+        public string TimeInForce { get; set; }
+        public int? LeavesQty { get; set; }
+        public int? CumQty { get; set; }
+
     }
+
+    //public class CandleWeb
+    //{
+    //    public DateTime TimeStamp { get; set; }
+    //    public double? Open { get; set; }
+    //    public double? Close { get; set; }
+    //    public double? High { get; set; }
+    //    public double? Low { get; set; }
+    //    public double? Volume { get; set; }
+    //    public int Trades { get; set; }
+    //    public int PCC { get; set; }  // Previous Candle Count     
+    //    public string TDUoD { get; set; }
+    //    public int TDSeq { get; set; }
+    //    public double? MACDHistorgram { get; set; }
+    //    public double? RSI { get; set; } // For RSI
+    //    public double? MA1 { get; set; }
+    //    public double? MA2 { get; set; }
+    //    public double? BBUpper { get; set; }
+    //    public double? BBMiddle { get; set; }
+    //    public double? BBLower { get; set; }
+    //    public double? EMA1 { get; set; }
+    //    public double? EMA2 { get; set; }
+    //    public double? EMA3 { get; set; }
+    //    public double? MACDLine { get; set; }
+    //    public double? MACDSignalLine { get; set; }
+    //    //public double? MACDHistorgram { get; set; }
+    //    public double? STOCHK { get; set; }
+    //    public double? STOCHD { get; set; }
+    //    public double? TR { get; set; }
+    //    public double? ATR1 { get; set; }
+    //    public double? ATR2 { get; set; }
+    //    public void SetTR(double? PreviousClose)
+    //    {
+    //        List<double?> TRs = new List<double?>();
+
+    //        TRs.Add(High - Low);
+    //        TRs.Add(Convert.ToDouble(Math.Abs(Convert.ToDecimal(High - PreviousClose))));
+    //        TRs.Add(Convert.ToDouble(Math.Abs(Convert.ToDecimal(Low - PreviousClose))));
+
+    //        TR = TRs.Max();
+    //    }
+
+    //    public double? GainOrLoss // For RSI
+    //    {
+    //        get { return (Close - Open) ?? 0; } // 0 if null
+    //    }
+    //    public double? RS { get; set; } // For RSI
+    //    //public double? RSI { get; set; } // For RSI
+    //    public double? AVGGain { get; set; } // For RSI
+    //    public double? AVGLoss { get; set; } // For RSI
+    //}
 }

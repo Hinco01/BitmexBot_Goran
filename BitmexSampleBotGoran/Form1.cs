@@ -89,7 +89,7 @@ namespace BitmexSampleBotGoran
         List<OrderBook> OrderBookTopAsks = new List<OrderBook>();
         List<OrderBook> OrderBookTopBids = new List<OrderBook>();
         Position SymbolPosition = new Position();
-        //CandleWeb CandlesWebSocket = new CandleWeb();
+        Candle CandlesWebSocket = new Candle();
         Order SymbolOrder = new Order();
         //OrderBook SymbolOrderBook = new OrderBook();
 
@@ -106,6 +106,7 @@ namespace BitmexSampleBotGoran
         int DblcheckSell = 0;
 
         bool APIValid = false;
+        bool CandlesFirstTime = false;
 
         public Form1()
         {
@@ -251,7 +252,55 @@ namespace BitmexSampleBotGoran
                     JObject Message = JObject.Parse(e.Data);
                     if (Message.ContainsKey("table"))
                     {
-                        if ((string)Message["table"] == "trade")
+                        if ((string)Message["table"] == "tradeBin5m")
+                        {
+                            if (Message.ContainsKey("data"))
+                            {
+                                JArray TD = (JArray)Message["data"];
+                                if (TD.Any())
+                                {
+                                    if (TD.Children().LastOrDefault()["timestamp"] != null)
+                                    {
+                                        CandlesWebSocket.TimeStamp = (DateTime)TD.Children().LastOrDefault()["timestamp"];
+                                    }
+                                    if (TD.Children().LastOrDefault()["open"] != null)
+                                    {
+                                        CandlesWebSocket.Open = (double?)TD.Children().LastOrDefault()["open"];
+                                    }
+                                    if (TD.Children().LastOrDefault()["high"] != null)
+                                    {
+                                        CandlesWebSocket.High = (double?)TD.Children().LastOrDefault()["high"];
+
+                                    }
+                                    if (TD.Children().LastOrDefault()["low"] != null)
+                                    {
+                                        CandlesWebSocket.Low = (double?)TD.Children().LastOrDefault()["low"];
+
+                                    }
+                                    if (TD.Children().LastOrDefault()["close"] != null)
+                                    {
+                                        CandlesWebSocket.Close = (double?)TD.Children().LastOrDefault()["close"];
+
+                                    }
+                                    if (TD.Children().LastOrDefault()["trades"] != null)
+                                    {
+                                        CandlesWebSocket.Trades = (int)TD.Children().LastOrDefault()["trades"];
+                                    }
+                                    if (TD.Children().LastOrDefault()["volume"] != null)
+                                    {
+                                        CandlesWebSocket.Volume = (double?)TD.Children().LastOrDefault()["volume"];
+
+                                    }
+                                    //if (CandlesFirstTime == true)
+                                    //{
+                                    //    NewWSCandle();
+                                    //    UpdateCandles();
+                                    //}
+                                }
+                            }
+                        }
+
+                        else if ((string)Message["table"] == "trade")
                         {
                             if (Message.ContainsKey("data"))
                             {
@@ -261,11 +310,23 @@ namespace BitmexSampleBotGoran
                                     decimal Price = (decimal)TD.Children().LastOrDefault()["price"];
                                     string Symbol = (string)TD.Children().LastOrDefault()["symbol"];
                                     Prices[Symbol] = Price;
+
+                                    //if (CandlesFirstTime == true)
+                                    //{
+                                    //    Candles[0].Close = Convert.ToDouble(Price);
+                                    //    if (Candles[0].Low > Convert.ToDouble(Price))
+                                    //    {
+                                    //        Candles[0].Low = Convert.ToDouble(Price);
+                                    //    }
+                                    //    if (Candles[0].High < Convert.ToDouble(Price))
+                                    //    {
+                                    //        Candles[0].High = Convert.ToDouble(Price);
+                                    //    }
+                                    //    UpdateCandles();
+                                    //}
                                 }
                             }
                         }
-
-
 
                         else if ((string)Message["table"] == "orderBook10")
                         {
@@ -498,10 +559,7 @@ namespace BitmexSampleBotGoran
 
 
                         }
-                        else if ((string)Message["table"] == "tradeBin5m")
-                        {
-
-                        }
+                        
                     }
                     else if (Message.ContainsKey("info") && Message.ContainsKey("docs"))
                     {
@@ -553,12 +611,12 @@ namespace BitmexSampleBotGoran
 
                 ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"trade:" + ActiveInstrument.Symbol + "\"]}");
 
-                //ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"tradeBin5m:" + ActiveInstrument.Symbol + "\"]}");
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"tradeBin5m:" + ActiveInstrument.Symbol + "\"]}");
 
                 ActiveInstrument = bitmex.GetInstrument(((Instrument)ddlSymbol.SelectedItem).Symbol)[0];
             }
 
-            //ws.Send("{\"op\": \"subscribe\", \"args\": [\"tradeBin5m:" + ActiveInstrument.Symbol + "\"]}");
+            ws.Send("{\"op\": \"subscribe\", \"args\": [\"tradeBin5m:" + ActiveInstrument.Symbol + "\"]}");
             ws.Send("{\"op\": \"subscribe\", \"args\": [\"order:" + ActiveInstrument.Symbol + "\"]}");
             // Subscribe to new orderbook
             ws.Send("{\"op\": \"subscribe\", \"args\": [\"orderBook10:" + ActiveInstrument.Symbol + "\"]}");
@@ -731,14 +789,112 @@ namespace BitmexSampleBotGoran
             }            
         }
 
+        private void NewWSCandle()
+        {
+
+            if (CandlesFirstTime == true)
+            {                
+                for (int i = 499; i > 1; i--)
+                {
+                    Candles[i].TimeStamp = Candles[i - 1].TimeStamp;
+                    Candles[i].Open = Candles[i - 1].Open;
+                    Candles[i].Close = Candles[i - 1].Close;
+                    Candles[i].High = Candles[i - 1].High;
+                    Candles[i].Low = Candles[i - 1].Low;
+                    Candles[i].Volume = Candles[i - 1].Volume;
+                    Candles[i].Trades = Candles[i - 1].Trades;
+                    Candles[i].PCC = Candles[i - 1].PCC;
+                    Candles[i].TDUoD = Candles[i - 1].TDUoD;
+                    Candles[i].TDSeq = Candles[i - 1].TDSeq;
+                    Candles[i].MACDHistorgram = Candles[i - 1].MACDHistorgram;
+                    Candles[i].RSI = Candles[i - 1].RSI;
+                    Candles[i].MA1 = Candles[i - 1].MA1;
+                    Candles[i].MA2 = Candles[i - 1].MA2;
+                    Candles[i].BBUpper = Candles[i - 1].BBUpper;
+                    Candles[i].BBMiddle = Candles[i - 1].BBMiddle;
+                    Candles[i].BBLower = Candles[i - 1].BBLower;
+                    Candles[i].EMA1 = Candles[i - 1].EMA1;
+                    Candles[i].EMA2 = Candles[i - 1].EMA2;
+                    Candles[i].EMA3 = Candles[i - 1].EMA3;
+                    Candles[i].MACDLine = Candles[i - 1].MACDLine;
+                    Candles[i].MACDSignalLine = Candles[i - 1].MACDSignalLine;
+                    Candles[i].STOCHK = Candles[i - 1].STOCHK;
+                    Candles[i].STOCHD = Candles[i - 1].STOCHD;
+                    Candles[i].TR = Candles[i - 1].TR;
+                    Candles[i].ATR1 = Candles[i - 1].ATR1;
+                    Candles[i].ATR2 = Candles[i - 1].ATR2;
+                    //Candles[i].SetTR = Candles[i - 1].SetTR;
+                    //Candles[i].GainOrLoss = Candles[i - 1].GainOrLoss;
+                    Candles[i].RS = Candles[i - 1].RS;
+                    Candles[i].AVGGain = Candles[i - 1].AVGGain;
+                    Candles[i].AVGLoss = Candles[i - 1].AVGLoss;
+                }
+
+                Candles[1].TimeStamp = CandlesWebSocket.TimeStamp;
+                Candles[1].Open = CandlesWebSocket.Open;
+                Candles[1].Close = CandlesWebSocket.Close;
+                Candles[1].High = CandlesWebSocket.High;
+                Candles[1].Low = CandlesWebSocket.Low;
+                Candles[1].Volume = CandlesWebSocket.Volume;
+                Candles[1].Trades = CandlesWebSocket.Trades;
+
+                Candles[0].TimeStamp = Candles[1].TimeStamp.AddMinutes(5);
+                Candles[0].Open = Candles[1].Open;
+                Candles[0].Close = Candles[1].Open;
+                Candles[0].High = Candles[1].Open;
+                Candles[0].Low = Candles[1].Open;
+                Candles[0].Volume = null;
+                Candles[0].Trades = 0;
+                Candles[0].PCC = 0;
+                Candles[0].TDUoD = null;
+                Candles[0].TDSeq = 0;
+                Candles[0].MACDHistorgram = null;
+                Candles[0].RSI = null;
+                Candles[0].MA1 = null;
+                Candles[0].MA2 = null;
+                Candles[0].BBUpper = null;
+                Candles[0].BBMiddle = null;
+                Candles[0].BBLower = null;
+                Candles[0].EMA1 = null;
+                Candles[0].EMA2 = null;
+                Candles[0].EMA3 = null;
+                Candles[0].MACDLine = null;
+                Candles[0].MACDSignalLine = null;
+                Candles[0].STOCHK = null;
+                Candles[0].STOCHD = null;
+                Candles[0].TR = null;
+                Candles[0].ATR1 = null;
+                Candles[0].ATR2 = null;
+                //Candles[i].SetTR = Candles[i - 1].SetTR;
+                //Candles[i].GainOrLoss = Candles[i - 1].GainOrLoss;
+                Candles[0].RS = null;
+                Candles[0].AVGGain = null;
+                Candles[0].AVGLoss = null;
+
+            }
+
+
+
+
+        }
+
         private void UpdateCandles ()
         {
 
             #region ORIGINAL CANDLES
             // Get Candles
-            Candles = bitmex.GetCandleHistory(ActiveInstrument.Symbol, 500, ddlCandleTimes.SelectedItem.ToString());
+
+            //if (CandlesFirstTime == false)
+            //{
+                Candles = bitmex.GetCandleHistory(ActiveInstrument.Symbol, 500, ddlCandleTimes.SelectedItem.ToString());
+            //}
+
+           
+
 
             Candles = Candles.OrderBy(a => a.TimeStamp).ToList();
+
+            
 
             // For TD Sequential
             int TimeFrameTDSeq = 0;
@@ -1187,7 +1343,8 @@ namespace BitmexSampleBotGoran
             {                    
                 SetBotMode(); // We only need to set bot mode if bot is running
                 btnAutomatedTrading.Text = "Stop - " + Mode; // So we can see what the mode of the bot is while running
-            }           
+            }
+            CandlesFirstTime = true;
 
         }
         

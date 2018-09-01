@@ -23,12 +23,12 @@ namespace BitmexSampleBotGoran
     public partial class Form1 : Form
     {
 
-        private static string TestbitmexKey = "test";
-        private static string TestbitmexSecret = "test";
+       // private static string TestbitmexKey = "test";
+       // private static string TestbitmexSecret = "test";
         private static string TestbitmexDomain = "https://testnet.bitmex.com";
 
-        private static string bitmexKey = "test";
-        private static string bitmexSecret = "test";
+      //  private static string bitmexKey = "test";
+       // private static string bitmexSecret = "test";
         private static string bitmexDomain = "https://www.bitmex.com";
 
         string WebSocketAPIKey = "";
@@ -121,7 +121,7 @@ namespace BitmexSampleBotGoran
 
         private void InitializeDropdownsAndSettings()
         {            
-            ddNetwork.SelectedIndex = 1;
+            ddNetwork.SelectedIndex = 0;
             ddOrderType.SelectedIndex = 1;
             ddlCandleTimes.SelectedIndex = 1;
             ddlAutoOrderType.SelectedIndex = 1;
@@ -137,16 +137,16 @@ namespace BitmexSampleBotGoran
                     txtAPIKey.Text = Properties.Settings.Default.TestAPIKey;
                     txtAPISecret.Text = Properties.Settings.Default.TestAPISecret;
 
-                    //WebSocketAPIKey = Properties.Settings.Default.TestAPIKey;
-                    //WebSocketAPISecret = Properties.Settings.Default.TestAPISecret;
+                    WebSocketAPIKey = Properties.Settings.Default.TestAPIKey;
+                    WebSocketAPISecret = Properties.Settings.Default.TestAPISecret;
 
                     break;
                 case "RealNet":
                     txtAPIKey.Text = Properties.Settings.Default.APIKey;
                     txtAPISecret.Text = Properties.Settings.Default.APISecret;
 
-                    //WebSocketAPIKey = Properties.Settings.Default.APIKey;
-                    //WebSocketAPISecret = Properties.Settings.Default.APISecret;
+                    WebSocketAPIKey = Properties.Settings.Default.APIKey;
+                    WebSocketAPISecret = Properties.Settings.Default.APISecret;
                     break;
             }
         }
@@ -161,23 +161,23 @@ namespace BitmexSampleBotGoran
         {
             switch(ddNetwork.SelectedItem.ToString())
             {
+                //case "TestNet":
+                //    bitmex = new BitMEXApi(TestbitmexKey, TestbitmexSecret, TestbitmexDomain);
+                //    WebSocketAPIKey = TestbitmexKey;
+                //    WebSocketAPISecret = TestbitmexSecret;
+                //    break;
+                //case "RealNet":
+                //    bitmex = new BitMEXApi(bitmexKey, bitmexSecret, bitmexDomain);
+                //    WebSocketAPIKey = bitmexKey;
+                //    WebSocketAPISecret = bitmexSecret;
+                //    break;
+
                 case "TestNet":
-                    bitmex = new BitMEXApi(TestbitmexKey, TestbitmexSecret, TestbitmexDomain);
-                    WebSocketAPIKey = TestbitmexKey;
-                    WebSocketAPISecret = TestbitmexSecret;
+                    bitmex = new BitMEXApi(txtAPIKey.Text, txtAPISecret.Text, TestbitmexDomain);
                     break;
                 case "RealNet":
-                    bitmex = new BitMEXApi(bitmexKey, bitmexSecret, bitmexDomain);
-                    WebSocketAPIKey = bitmexKey;
-                    WebSocketAPISecret = bitmexSecret;
+                    bitmex = new BitMEXApi(txtAPIKey.Text, txtAPISecret.Text, bitmexDomain);
                     break;
-
-                //case "TestNet":
-                //    bitmex = new BitMEXApi(txtAPIKey.Text, txtAPISecret.Text, TestbitmexDomain);
-                //    break;
-               // case "RealNet":
-               //     bitmex = new BitMEXApi(txtAPIKey.Text, txtAPISecret.Text, bitmexDomain);
-                //    break;
             }
             Heartbeat.Start();
             // We must do this in case symbols are different on test and real net
@@ -2230,13 +2230,13 @@ namespace BitmexSampleBotGoran
                 case "TestNet":
                     Properties.Settings.Default.TestAPIKey = txtAPIKey.Text;
 
-                    //WebSocketAPIKey = Properties.Settings.Default.TestAPIKey;
+                    WebSocketAPIKey = Properties.Settings.Default.TestAPIKey;
                     
                     break;
                 case "RealNet":
                     Properties.Settings.Default.APIKey = txtAPIKey.Text;
 
-                    //WebSocketAPIKey = Properties.Settings.Default.APIKey;
+                    WebSocketAPIKey = Properties.Settings.Default.APIKey;
                     
                     break;
             }
@@ -2258,13 +2258,13 @@ namespace BitmexSampleBotGoran
                 case "TestNet":
                     Properties.Settings.Default.TestAPISecret = txtAPISecret.Text;
 
-                    //WebSocketAPISecret = Properties.Settings.Default.TestAPISecret;                    
+                    WebSocketAPISecret = Properties.Settings.Default.TestAPISecret;                    
                     
                     break;
                 case "RealNet":
                     Properties.Settings.Default.APISecret = txtAPISecret.Text;
 
-                    //WebSocketAPISecret = Properties.Settings.Default.APISecret;
+                    WebSocketAPISecret = Properties.Settings.Default.APISecret;
                     
                     break;
             }

@@ -1394,6 +1394,12 @@ namespace BitmexSampleBotGoran
                     Dblcheck = 0;
                     DblcheckSell = 0;
                 }
+                else if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 2) && (Candles[2].TDUoD == "Down") && (Candles[2].TDSeq == 1))
+                {
+                    Mode = "Wait";
+                    Dblcheck = 0;
+                    DblcheckSell = 0;
+                }
                 else if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
                 {
                     // Did the last full candle have MACDLine cross above MACDSignalLine?  We'll need to buy now.
@@ -1492,6 +1498,12 @@ namespace BitmexSampleBotGoran
                 #endregion OldSellCheck2
 
                 if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1))
+                {
+                    Mode = "Wait";
+                    Dblcheck = 0;
+                    DblcheckSell = 0;
+                }
+                else if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 2) && (Candles[2].TDUoD == "Up") && (Candles[2].TDSeq == 1))
                 {
                     Mode = "Wait";
                     Dblcheck = 0;

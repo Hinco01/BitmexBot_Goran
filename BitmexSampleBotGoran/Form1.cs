@@ -101,6 +101,7 @@ namespace BitmexSampleBotGoran
 
         decimal Balance = 0;
         decimal WalletBalance = 0;
+        decimal AvaliableMargin = 0;
 
         int Dblcheck = 0;
         int DblcheckSell = 0;
@@ -124,7 +125,7 @@ namespace BitmexSampleBotGoran
         {            
             ddNetwork.SelectedIndex = 1;
             ddOrderType.SelectedIndex = 1;
-            ddlCandleTimes.SelectedIndex = 1;
+            ddlCandleTimes.SelectedIndex = 0;
             ddlAutoOrderType.SelectedIndex = 1;
 
             LoadAPISettings();
@@ -466,6 +467,7 @@ namespace BitmexSampleBotGoran
                                     try
                                     {
                                         Balance = ((decimal)TD.Children().LastOrDefault()["walletBalance"] / 100000000);
+                                        AvaliableMargin = ((decimal)TD.Children().LastOrDefault()["availableMargin"] / 100000000);
                                         UpdateBalanceAndTime();
                                     }
                                     catch (Exception ex)
@@ -741,14 +743,20 @@ namespace BitmexSampleBotGoran
 
         private void ddNetwork_SelectedIndexChanged(object sender, EventArgs e)
         {
+
             if (FirstINITNET != true)
             {
+                if (ws != null)
+                {
+                    ws.Close(); // Make sure our websocket is closed.
+                }
                 LoadAPISettings();
                 InitializeAPI();
                 InitializeWebSocket();
                 InitializeSymbolSpecificData();
                 InitializeWalletWebSocket();
                 UpdatePositionInfo();
+                UpdateOrderInfo();
             }
             else
             {
@@ -1353,6 +1361,8 @@ namespace BitmexSampleBotGoran
             // This is where we determine what mode bot is in
             if(rdoBuy.Checked)
             {
+
+                #region OldBuyCheck
                 //if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
                 //{
                 //    // Did the last full candle have MA1 cross above MA2?  We'll need to buy now
@@ -1376,8 +1386,15 @@ namespace BitmexSampleBotGoran
 
                 // MACD Example
                 //if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine <= Candles[1].MACDSignalLine) && (Candles[0].Close < Candles[0].BBUpper)) // Most recently closed candle crossed over up
+                #endregion OldBuyCheck
 
-                if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
+                if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 1))
+                {
+                    Mode = "Wait";
+                    Dblcheck = 0;
+                    DblcheckSell = 0;
+                }
+                else if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
                 {
                     // Did the last full candle have MACDLine cross above MACDSignalLine?  We'll need to buy now.
                     Dblcheck++;
@@ -1406,6 +1423,8 @@ namespace BitmexSampleBotGoran
                     Dblcheck = 0;
                     DblcheckSell = 0;
                 }
+
+                #region OldSellCheck
                 //else if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine >= Candles[1].MACDSignalLine))
                 //{
                 //    // Did the last full candle have MACDLine cross below MACDSignalLine?  We'll need to close any open position.
@@ -1427,6 +1446,7 @@ namespace BitmexSampleBotGoran
                 //    Dblcheck = 0;
                 //    DblcheckSell = 0;
                 //}
+                #endregion OldSellCheck
                 else
                 {
                     Mode = "Wait";
@@ -1437,7 +1457,7 @@ namespace BitmexSampleBotGoran
             }
             else if(rdoSell.Checked)
             {
-                
+                #region OldSellCheck2
                 //if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
                 //{
                 //    // Did the last full candle have MA1 cross above MA2?  We'll need to close any open position.
@@ -1469,8 +1489,15 @@ namespace BitmexSampleBotGoran
                 //}
 
                 //if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine >= Candles[1].MACDSignalLine) && (Candles[0].Close > Candles[0].BBLower))
+                #endregion OldSellCheck2
 
-                if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
+                if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1))
+                {
+                    Mode = "Wait";
+                    Dblcheck = 0;
+                    DblcheckSell = 0;
+                }
+                else if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
                 {
                     // Did the last full candle have MA1 cross below MA2?  We'll need to sell now
                     DblcheckSell++;
@@ -1499,6 +1526,7 @@ namespace BitmexSampleBotGoran
                     DblcheckSell = 0;
                     Dblcheck = 0;
                 }
+                #region OldSellCheck3
                 //else if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine > Candles[1].MACDSignalLine))
                 //{
                 //    // If no crossover, is MA1 still above MA2?  We'll need to make sure we don't have a position open.
@@ -1513,6 +1541,7 @@ namespace BitmexSampleBotGoran
                 //    DblcheckSell = 0;
                 //    Dblcheck = 0;
                 //}
+                #endregion OldSellCheck3
                 else
                 {
                     Mode = "Wait";
@@ -1520,6 +1549,8 @@ namespace BitmexSampleBotGoran
                     Dblcheck = 0;
                 }
             }
+
+            #region OldSwitchCheck
             //else if(rdoSwitch.Checked)
             //{
             //    if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
@@ -1543,6 +1574,7 @@ namespace BitmexSampleBotGoran
             //        Mode = "CloseLongsAndWait";
             //    }
             //}
+            #endregion OldSwitchCheck
         }
 
         private void tmrCandleUpdater_Tick(object sender, EventArgs e)
@@ -1690,9 +1722,15 @@ namespace BitmexSampleBotGoran
                 OpenOrdercheck = false;
             }
 
+            if (SymbolPosition.IsOpen == false && OpenOrdercheck == false && AvaliableMargin < ((nudPercentToTrade.Value / 100) * Balance))
+            {                
+                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+            }
+
             //if (OpenPositions.Any() && !OpenOrders.Any())
             if (SymbolPosition.IsOpen == true && OpenOrdercheck == false)
             {
+                bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
                 //if (OpenPositions[0].CurrentQty > 0)
                 if (SymbolPosition.CurrentQty > 0)
                 {

@@ -42,6 +42,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.txtSettingsWebsocketInfo = new System.Windows.Forms.TextBox();
             this.lblRetry = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -107,7 +108,6 @@
             this.txtOrderSide = new System.Windows.Forms.TextBox();
             this.txtOrderSize = new System.Windows.Forms.TextBox();
             this.txtOrderPrice = new System.Windows.Forms.TextBox();
-            this.txtSettingsWebsocketInfo = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.nupQty)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA2)).BeginInit();
@@ -279,6 +279,14 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Candles";
             // 
+            // txtSettingsWebsocketInfo
+            // 
+            this.txtSettingsWebsocketInfo.Enabled = false;
+            this.txtSettingsWebsocketInfo.Location = new System.Drawing.Point(825, 18);
+            this.txtSettingsWebsocketInfo.Name = "txtSettingsWebsocketInfo";
+            this.txtSettingsWebsocketInfo.Size = new System.Drawing.Size(543, 20);
+            this.txtSettingsWebsocketInfo.TabIndex = 20;
+            // 
             // lblRetry
             // 
             this.lblRetry.AutoSize = true;
@@ -417,14 +425,14 @@
             0,
             0,
             0});
+            this.nupRSIDifference.Minimum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            -2147483648});
             this.nupRSIDifference.Name = "nupRSIDifference";
             this.nupRSIDifference.Size = new System.Drawing.Size(60, 20);
             this.nupRSIDifference.TabIndex = 26;
-            this.nupRSIDifference.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             // 
             // label22
             // 
@@ -456,7 +464,7 @@
             this.nudPercentToTrade.Size = new System.Drawing.Size(60, 20);
             this.nudPercentToTrade.TabIndex = 23;
             this.nudPercentToTrade.Value = new decimal(new int[] {
-            75,
+            90,
             0,
             0,
             0});
@@ -494,7 +502,7 @@
             this.nudPercentEarn.Size = new System.Drawing.Size(60, 20);
             this.nudPercentEarn.TabIndex = 21;
             this.nudPercentEarn.Value = new decimal(new int[] {
-            75,
+            25,
             0,
             0,
             131072});
@@ -600,7 +608,7 @@
             // 
             // tmrAutotradeExecution
             // 
-            this.tmrAutotradeExecution.Interval = 1500;
+            this.tmrAutotradeExecution.Interval = 2000;
             this.tmrAutotradeExecution.Tick += new System.EventHandler(this.tmrAutotradeExecution_Tick);
             // 
             // nudCurrentPrice
@@ -1001,14 +1009,6 @@
             this.txtOrderPrice.Name = "txtOrderPrice";
             this.txtOrderPrice.Size = new System.Drawing.Size(63, 20);
             this.txtOrderPrice.TabIndex = 1;
-            // 
-            // txtSettingsWebsocketInfo
-            // 
-            this.txtSettingsWebsocketInfo.Enabled = false;
-            this.txtSettingsWebsocketInfo.Location = new System.Drawing.Point(825, 18);
-            this.txtSettingsWebsocketInfo.Name = "txtSettingsWebsocketInfo";
-            this.txtSettingsWebsocketInfo.Size = new System.Drawing.Size(543, 20);
-            this.txtSettingsWebsocketInfo.TabIndex = 20;
             // 
             // Form1
             // 

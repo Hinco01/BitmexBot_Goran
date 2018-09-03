@@ -40,6 +40,10 @@ namespace BitmexSampleBotGoran
         bool UpStop = false;
         bool DownStop = false;
 
+        int WBFaliedTimes = 0;
+
+        string SLside;
+
         BitMEXApi bitmex;
         List<OrderBook> CurrentBook = new List<OrderBook>();
         List<Instrument> ActiveInstruments = new List<Instrument>();
@@ -102,6 +106,17 @@ namespace BitmexSampleBotGoran
         decimal Balance = 0;
         decimal WalletBalance = 0;
         decimal AvaliableMargin = 0;
+
+        decimal StopLossStartPer = 0;
+        decimal StopLossExecutePer = 0;
+        decimal StopLossStartPrice = 0;
+        decimal StopLossExecutePrice = 0;
+        decimal StopLossCancelPer = 0;
+        decimal StopLossCancel = 0;
+        bool StopLossActivate = false;
+
+        bool FirstLoadPrice = true;
+        decimal FirstPriceLoad = 0;
 
         int Dblcheck = 0;
         int DblcheckSell = 0;
@@ -228,8 +243,7 @@ namespace BitmexSampleBotGoran
             // {
             //     Prices.Add(i.Symbol, 0); //just setting up the item, 0 is fine here
             // }
-        }
-
+        }       
         private void InitializeWebSocket ()
         {          
             //if (ws != null)
@@ -310,7 +324,7 @@ namespace BitmexSampleBotGoran
                                 {
                                     decimal Price = (decimal)TD.Children().LastOrDefault()["price"];
                                     string Symbol = (string)TD.Children().LastOrDefault()["symbol"];
-                                    Prices[Symbol] = Price;
+                                    Prices[Symbol] = Price;                                    
 
                                     //if (CandlesFirstTime == true)
                                     //{
@@ -468,7 +482,14 @@ namespace BitmexSampleBotGoran
                                     {
                                         Balance = ((decimal)TD.Children().LastOrDefault()["walletBalance"] / 100000000);
                                         AvaliableMargin = ((decimal)TD.Children().LastOrDefault()["availableMargin"] / 100000000);
+                                        if (FirstLoadPrice == true)
+                                        {
+                                            FirstPriceLoad = Balance;
+                                            FirstLoadPrice = false;
+                                        }
+
                                         UpdateBalanceAndTime();
+
                                     }
                                     catch (Exception ex)
                                     {
@@ -790,10 +811,19 @@ namespace BitmexSampleBotGoran
                 string USDValue = (Prices["XBTUSD"] * Balance).ToString("C", new CultureInfo("en-US"));
                 lblBalanceAndTime.Invoke(new Action(() => lblBalanceAndTime.Text = "Balance: " + Math.Round(Balance, 8).ToString() + " | " + USDValue + "     " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.AddHours(HoursInFuture).ToLongTimeString()));
                 AutoQuantityCheck();
+                txtBalanceStart.Text = Math.Round(FirstPriceLoad, 8).ToString();
+                txtCurrentBalance.Text = Math.Round(Balance, 8).ToString();
+                txtBTCEarned.Text = Math.Round((Math.Round(Balance, 8) - Math.Round(FirstPriceLoad, 8)), 8).ToString();
+                txtPercentBTCEarned.Text = Math.Round((Math.Round((Math.Round(Balance, 8) - Math.Round(FirstPriceLoad, 8)), 8) / Math.Round(FirstPriceLoad, 8) * 100), 2).ToString();
             }
             catch (Exception ex)
             {
                 lblBalanceAndTime.Invoke(new Action(() => lblBalanceAndTime.Text = "Balance: Error     " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.AddHours(HoursInFuture).ToLongTimeString()));
+                txtBalanceStart.Text = "";
+                txtCurrentBalance.Text = "";
+                txtBTCEarned.Text = "";
+                txtPercentBTCEarned.Text = "";
+            
             }            
         }
 
@@ -1739,6 +1769,100 @@ namespace BitmexSampleBotGoran
                 string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
             }
 
+            if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0)
+            {
+                StopLossStartPer = (Convert.ToDecimal(nudStartStopLoss.Value) / 5) / 100;
+                StopLossStartPrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - (Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossStartPer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                StopLossExecutePer = (Convert.ToDecimal(nudExecuteStopLoss.Value) / 5) / 100;
+                StopLossExecutePrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - (Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossExecutePer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                StopLossCancelPer = StopLossStartPer / 2;
+                StopLossCancel = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - (Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossCancelPer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                txtStartStopLoss.Text = StopLossStartPrice.ToString();
+                txtExecuteStopLoss.Text = StopLossExecutePrice.ToString();
+                txtCancelStopLoss.Text = StopLossCancel.ToString();
+            }
+            else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0)
+            {
+                StopLossStartPer = 1 + ((Convert.ToDecimal(nudStartStopLoss.Value) / 5) / 100);
+                StopLossStartPrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossStartPer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                StopLossExecutePer = 1 + ((Convert.ToDecimal(nudExecuteStopLoss.Value) / 5) / 100);
+                StopLossExecutePrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossExecutePer) / Convert.ToDecimal(.5)) *Convert.ToDecimal(.5);
+
+                StopLossCancelPer = 1 + (((Convert.ToDecimal(nudStartStopLoss.Value) / 5) / 100) / 2);
+                StopLossCancel = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossCancelPer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                txtStartStopLoss.Text = StopLossStartPrice.ToString();
+                txtExecuteStopLoss.Text = StopLossExecutePrice.ToString();
+                txtCancelStopLoss.Text = StopLossCancel.ToString();
+            }
+            else
+            {
+                txtStartStopLoss.Text = "";
+                txtExecuteStopLoss.Text = "";
+                txtCancelStopLoss.Text = "";
+            }
+
+
+            if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0 && Prices[ActiveInstrument.Symbol] <= StopLossStartPrice)
+            {
+                StopLossActivate = true;
+            }
+            else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0 && Prices[ActiveInstrument.Symbol] >= StopLossStartPrice)
+            {
+                StopLossActivate = true;
+            }
+            else
+            {
+                StopLossActivate = false;
+            }
+
+            if (!chkStopLoss.Checked && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop")
+            {
+                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+            }
+
+            if (chkStopLoss.Checked && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop" && SymbolPosition.CurrentQty > 0 && Prices[ActiveInstrument.Symbol] >= StopLossCancel && StopLossActivate == false)
+            {
+                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+            }
+
+            if (chkStopLoss.Checked && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop" && SymbolPosition.CurrentQty < 0 && Prices[ActiveInstrument.Symbol] <= StopLossCancel && StopLossActivate == false)
+            {
+                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+            }
+
+
+
+            if (SymbolPosition.IsOpen == true && chkStopLoss.Checked && StopLossActivate == true)
+            {
+                if (OpenOrdercheck == true && SymbolOrder.OrdType != "Stop")
+                {
+                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                }
+
+                if (SymbolPosition.CurrentQty > 0)
+                {
+                    SLside = "Sell";
+                }
+                else if (SymbolPosition.CurrentQty < 0)
+                {
+                    SLside = "Buy";
+                }
+
+                if (OpenOrdercheck == true && SymbolOrder.OrdType == "Stop")
+                {                    
+                }                
+                else
+                {
+                    bitmex.MarketStopLoss(ActiveInstrument.Symbol, SLside, StopLossExecutePrice, Math.Abs(Convert.ToInt32(SymbolPosition.CurrentQty)));
+                }                
+            }
+            
+            
             //if (OpenPositions.Any() && !OpenOrders.Any())
             if (SymbolPosition.IsOpen == true && OpenOrdercheck == false)
             {
@@ -1776,17 +1900,17 @@ namespace BitmexSampleBotGoran
                 }
             }
             //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Sell"))
-            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Sell")
+            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Sell" && SymbolOrder.OrdType != "Stop")
             {
                 goto SkipToEnd;
             }
             //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Buy"))
-            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy")
+            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop")
             {
                 goto SkipToEnd;
             }
             //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Buy"))
-            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Buy")
+            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop")
             {
                 if (rdoBuy.Checked)
                 {
@@ -1798,7 +1922,7 @@ namespace BitmexSampleBotGoran
                 }
             }
             //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Sell"))
-            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy")
+            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop")
             {
                 if (rdoBuy.Checked)
                 {                    
@@ -1822,7 +1946,7 @@ namespace BitmexSampleBotGoran
                 }
             }
             //else if (!OpenPositions.Any() && OpenOrders.Any())
-            else if (SymbolPosition.IsOpen == false && OpenOrdercheck == true)
+            else if (SymbolPosition.IsOpen == false && OpenOrdercheck == true && SymbolOrder.OrdType != "Stop")
             {
                 if (rdoBuy.Checked && SymbolOrder.Side == "Sell")
                 {
@@ -2297,11 +2421,21 @@ namespace BitmexSampleBotGoran
                 else if (SymbolOrder.Side == "Sell")
                 {
                     txtOrderSize.Text = (SymbolOrder.OrderQty * -1).ToString();
+                }                
+
+                if (SymbolOrder.OrdType != "Stop")
+                {
+                    txtOrderPrice.Text = SymbolOrder.Price.ToString();
                 }
-                txtOrderPrice.Text = SymbolOrder.Price.ToString();
+                else if (SymbolOrder.OrdType == "Stop")
+                {
+                    txtOrderPrice.Text = SymbolOrder.StopPx.ToString();
+                }
+                //txtOrderPrice.Text = SymbolOrder.Price.ToString();
                 //txtOrderSize.Text = SymbolOrder.OrderQty.ToString();
                 txtOrderStatus.Text = SymbolOrder.OrdStatus;
                 txtOrderSide.Text = SymbolOrder.Side;
+                txtOrderType.Text = SymbolOrder.OrdType;
             }
             else
             {
@@ -2309,6 +2443,7 @@ namespace BitmexSampleBotGoran
                 txtOrderSize.Text = "";
                 txtOrderSide.Text = "";
                 txtOrderStatus.Text = "";
+                txtOrderType.Text = "";
             }
         }
 
@@ -2386,6 +2521,19 @@ namespace BitmexSampleBotGoran
             if (((TimeSpan)(DateTime.UtcNow - WebScocketLastMessage)).TotalSeconds > 5)
             {
                 ws.Ping();
+                if (ws.IsAlive == true)
+                {
+
+                }
+                else
+                {
+                    WBFaliedTimes++;
+                    txtWebSocketFails.Text = "Websocket failed times - " + WBFaliedTimes.ToString();
+                    ws.Close();
+                    InitializeWebSocket();
+                    InitializeSymbolSpecificData();
+                    InitializeWalletWebSocket();
+                }
             }
 
             if (rdoBuy.Checked)

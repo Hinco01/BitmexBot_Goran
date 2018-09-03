@@ -302,6 +302,37 @@ namespace BitMEX
             return res;
         }
 
+        public string MarketStopLoss(string Symbol, string Side, decimal Price, int Quantity)
+        {
+            var param = new Dictionary<string, string>();
+            param["symbol"] = Symbol;
+            param["side"] = Side;
+            param["orderQty"] = Quantity.ToString();
+            param["stopPx"] = Price.ToString().Replace(",", ".");
+            param["ordType"] = "Stop";
+            param["timeInForce"] = "ImmediateOrCancel";
+            param["execInst"] = "Close,LastPrice";
+
+            string res = Query("POST", "/order", param, true);
+            int RetryAttemptCount = 0;
+            int MaxRetries = RetryAttempts(res);
+            while (res.Contains("error") && RetryAttemptCount < MaxRetries)
+            {
+                errors.Add(res);
+                Thread.Sleep(500); // Force app to wait 500ms
+                res = Query("POST", "/order", param, true);
+                RetryAttemptCount++;
+                if (RetryAttemptCount == MaxRetries)
+                {
+                    errors.Add("Max rety attempts of " + MaxRetries.ToString() + " reached.");
+                    break;
+                }
+            }
+            return res;
+        }
+
+
+
         public string MarketOrder(string Symbol, string Side, int Quantity)
         {
             var param = new Dictionary<string, string>();

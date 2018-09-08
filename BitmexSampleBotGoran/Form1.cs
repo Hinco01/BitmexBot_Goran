@@ -928,6 +928,12 @@ namespace BitmexSampleBotGoran
 
             if (FirstINITNET != true)
             {
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"position:" + ActiveInstrument.Symbol + "\"]}");
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"order:" + ActiveInstrument.Symbol + "\"]}");
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"margin\"]}");
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"orderBook10:" + ActiveInstrument.Symbol + "\"]}");
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"trade:" + ActiveInstrument.Symbol + "\"]}");
+                ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"tradeBin5m:" + ActiveInstrument.Symbol + "\"]}");
                 if (ws != null)
                 {
                     ws.Close(); // Make sure our websocket is closed.
@@ -3386,6 +3392,11 @@ namespace BitmexSampleBotGoran
             }
             SaveSettings();
             InitializeAPI();
+
+            ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"position:" + ActiveInstrument.Symbol + "\"]}");
+            ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"order:" + ActiveInstrument.Symbol + "\"]}");
+            ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"margin\"]}");
+
             if (ws != null)
             {
                 ws.Close(); // Make sure our websocket is closed.
@@ -3414,6 +3425,11 @@ namespace BitmexSampleBotGoran
             }
             SaveSettings();
             InitializeAPI();
+
+            ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"position:" + ActiveInstrument.Symbol + "\"]}");
+            ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"order:" + ActiveInstrument.Symbol + "\"]}");
+            ws.Send("{\"op\": \"unsubscribe\", \"args\": [\"margin\"]}");
+
             if (ws != null)
             {
                 ws.Close(); // Make sure our websocket is closed.

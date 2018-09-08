@@ -42,6 +42,8 @@ namespace BitmexSampleBotGoran
 
         int WBFaliedTimes = 0;
 
+        int TPTimerLimit = 150;
+
         string SLside;
 
         BitMEXApi bitmex;
@@ -49,9 +51,25 @@ namespace BitmexSampleBotGoran
         List<Instrument> ActiveInstruments = new List<Instrument>();
         Instrument ActiveInstrument = new Instrument();
         List<Candle> Candles = new List<Candle>();
+        List<Candle1h> Candles1h = new List<Candle1h>();
+        List<Candle1d> Candles1d = new List<Candle1d>();
         //List<Candle> CandlesCHECK = new List<Candle>();
         //List<CandleDisplay> CandleDisplays = new List<CandleDisplay>();
         //List<CandleWeb> CandlesWebS = new List<CandleWeb>();
+
+        //string ActiveOrderID = null;
+        string CurrentOrderID = null;
+
+        //string ActiveOrderStatus = null;
+        //string CurrentOrderStatus = null;
+
+        bool ProcessOrderWS = true;
+        bool FirstOrderProcess = true;
+
+
+        bool PositionChange = false;
+        bool OrderChange = false;
+
 
         bool Running = false;
         string Mode = "Wait";
@@ -83,7 +101,57 @@ namespace BitmexSampleBotGoran
         int STOCHLookbackPeriod = 14;
         int STOCHDPeriod = 3;
 
-        
+
+        //1h
+        // Bolinger Bands BB
+        int BBLength1h = 20;
+        double BBMultiplier1h = 2;
+
+        // EMA 
+        int EMA1Period1h = 26; // Slow MACD EMA
+        int EMA2Period1h = 12; // Fast MACD EMA
+        int EMA3Period1h = 9;
+
+        // For MACD
+        int MACDEMAPeriod1h = 9;  // MACD smoothing period
+
+        // For ATR
+        int ATR1Period1h = 7;
+        int ATR2Period1h = 20;
+
+        // For RSI
+        int RSIPeriod1h = 14;
+
+        // For Stochastic (STOCH)
+        int STOCHLookbackPeriod1h = 14;
+        int STOCHDPeriod1h = 3;
+
+
+        //1d
+        // Bolinger Bands BB
+        int BBLength1d = 20;
+        double BBMultiplier1d = 2;
+
+        // EMA 
+        int EMA1Period1d = 26; // Slow MACD EMA
+        int EMA2Period1d = 12; // Fast MACD EMA
+        int EMA3Period1d = 9;
+
+        // For MACD
+        int MACDEMAPeriod1d = 9;  // MACD smoothing period
+
+        // For ATR
+        int ATR1Period1d = 7;
+        int ATR2Period1d = 20;
+
+        // For RSI
+        int RSIPeriod1d = 14;
+
+        // For Stochastic (STOCH)
+        int STOCHLookbackPeriod1d = 14;
+        int STOCHDPeriod1d = 3;
+
+
 
         WebSocket ws;
         DateTime WebScocketLastMessage = new DateTime();
@@ -114,6 +182,19 @@ namespace BitmexSampleBotGoran
         decimal StopLossCancelPer = 0;
         decimal StopLossCancel = 0;
         bool StopLossActivate = false;
+        bool NotStopLoss = false;
+
+        decimal? StopPriceCheck = null;
+        decimal? PriceCheck = null;
+        decimal? PositionPriceCheck = null;
+
+        decimal TrailingProfitStartPer = 0;
+        decimal TrailingProfitStartPrice = 0;
+        decimal TrailingProfitExecutePer = 0;
+        decimal TrailingProfitExecutePrice = 0;
+        string TPSide;
+        bool TrailigProfitOrderOpen = false;
+        bool FirstTimeTPStrat = true;
 
         bool FirstLoadPrice = true;
         decimal FirstPriceLoad = 0;
@@ -123,6 +204,9 @@ namespace BitmexSampleBotGoran
 
         bool APIValid = false;
         bool CandlesFirstTime = false;
+
+        bool HourCandleFiratTime = true;
+        bool DayCandleFiratTime = true;
 
         public Form1()
         {
@@ -142,6 +226,7 @@ namespace BitmexSampleBotGoran
             ddOrderType.SelectedIndex = 1;
             ddlCandleTimes.SelectedIndex = 0;
             ddlAutoOrderType.SelectedIndex = 1;
+            ddlStrategyType.SelectedIndex = 0;
 
             LoadAPISettings();
         }
@@ -171,7 +256,11 @@ namespace BitmexSampleBotGoran
 
         private void InitializeCandleArea ()
         {
+            UpdateCandles1h();
+            UpdateCandles1d();
+            UpdateCandles();
             tmrCandleUpdater.Start();
+            tmrCandleUpdaterhd.Start();
         }
 
         private void InitializeAPI()
@@ -401,6 +490,17 @@ namespace BitmexSampleBotGoran
                                 if (TD.Any())
                                 {
 
+                                    if (TD.Children().LastOrDefault()["avgEntryPrice"] != null)
+                                    {
+                                        PositionPriceCheck = (decimal?)TD.Children().LastOrDefault()["avgEntryPrice"];
+
+                                    }
+                                    if (TD.Children().LastOrDefault()["isOpen"] != null || PositionPriceCheck != SymbolPosition.AvgEntryPrice)
+                                    {
+                                        PositionChange = true;
+                                        TPTimerLimit = 0;
+                                        txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
+                                    }
                                     //if (TD.Children().LastOrDefault()["isOpen"] != null && (string)TD.Children().LastOrDefault()["isOpen"] == "true")
                                     //{
 
@@ -506,77 +606,138 @@ namespace BitmexSampleBotGoran
                                 JArray TD = (JArray)Message["data"];
                                 if (TD.Any())
                                 {
+                                    
 
-                                    //if ((string)TD.Children().LastOrDefault()["orderID"] == SymbolOrder.OrderId)
+                                    //if (TD.Children().LastOrDefault()["orderID"] != null && ActiveOrderID == null)
                                     //{
-
-                                    if (TD.Children().LastOrDefault()["symbol"] != null)
-                                    {
-                                        SymbolOrder.Symbol = (string)TD.Children().LastOrDefault()["symbol"];
-                                    }
-                                    if (TD.Children().LastOrDefault()["orderQty"] != null)
-                                    {
-                                        SymbolOrder.OrderQty = (int?)TD.Children().LastOrDefault()["orderQty"];
-
-                                    }
-                                    if (TD.Children().LastOrDefault()["ordType"] != null)
-                                    {
-                                        SymbolOrder.OrdType = (string)TD.Children().LastOrDefault()["ordType"];
-
-                                    }
-                                    if (TD.Children().LastOrDefault()["ordStatus"] != null)
-                                    {
-                                        SymbolOrder.OrdStatus = (string)TD.Children().LastOrDefault()["ordStatus"];
-
-                                    }
-                                    if (TD.Children().LastOrDefault()["orderID"] != null)
-                                    {
-                                        SymbolOrder.OrderId = (string)TD.Children().LastOrDefault()["orderID"];
-                                    }
-                                    if (TD.Children().LastOrDefault()["side"] != null)
-                                    {
-                                        SymbolOrder.Side = (string)TD.Children().LastOrDefault()["side"];
-
-                                    }
-                                    if (TD.Children().LastOrDefault()["price"] != null)
-                                    {
-                                        SymbolOrder.Price = (decimal?)TD.Children().LastOrDefault()["price"];
-                                    }
-                                    if (TD.Children().LastOrDefault()["displayQty"] != null)
-                                    {
-                                        SymbolOrder.DisplayQty = (int?)TD.Children().LastOrDefault()["displayQty"];
-
-                                    }
-
-                                    if (TD.Children().LastOrDefault()["workingIndicator"] != null)
-                                    {
-                                        SymbolOrder.WorkingIndicator = (bool?)TD.Children().LastOrDefault()["workingIndicator"];
-                                    }
-
-                                    if (TD.Children().LastOrDefault()["stopPx"] != null)
-                                    {
-                                        SymbolOrder.StopPx = (decimal?)TD.Children().LastOrDefault()["stopPx"];
-                                    }
-
-                                    if (TD.Children().LastOrDefault()["timeInForce"] != null)
-                                    {
-                                        SymbolOrder.TimeInForce = (string)TD.Children().LastOrDefault()["timeInForce"];
-                                    }
-
-                                    if (TD.Children().LastOrDefault()["leavesQty"] != null)
-                                    {
-                                        SymbolOrder.LeavesQty = (int?)TD.Children().LastOrDefault()["leavesQty"];
-                                    }
-                                    if (TD.Children().LastOrDefault()["cumQty"] != null)
-                                    {
-                                        SymbolOrder.CumQty = (int?)TD.Children().LastOrDefault()["cumQty"];
-                                    }
-                                    if (TD.Children().LastOrDefault()["timestamp"] != null)
-                                    {
-                                        SymbolOrder.TimeStamp = (DateTime)TD.Children().LastOrDefault()["timestamp"];
-                                    }
-
+                                    //    ActiveOrderID = (string)TD.Children().LastOrDefault()["orderID"];
+                                    //    ProcessOrderWS = true;
                                     //}
+
+                                    //if (TD.Children().LastOrDefault()["ordStatus"] != null && ActiveOrderStatus == null)
+                                    //{
+                                    //    ActiveOrderStatus = (string)TD.Children().LastOrDefault()["ordStatus"];
+                                    //    ProcessOrderWS = true;
+                                    //}
+
+                                    if (TD.Children().LastOrDefault()["orderID"] != null && FirstOrderProcess == false)
+                                    {
+                                        CurrentOrderID = (string)TD.Children().LastOrDefault()["orderID"];
+                                    }
+
+                                    //if (TD.Children().LastOrDefault()["ordStatus"] != null && FirstOrderProcess == false)
+                                    //{
+                                    //    CurrentOrderStatus = (string)TD.Children().LastOrDefault()["ordStatus"];
+                                    //}
+
+                                    if (FirstOrderProcess == false)
+                                    {
+                                        if (CurrentOrderID == SymbolOrder.OrderId)
+                                        {
+                                            ProcessOrderWS = true;
+                                        }
+                                        else if (SymbolOrder.OrdStatus != "New" && SymbolOrder.OrdStatus != "PartiallyFilled" && CurrentOrderID != SymbolOrder.OrderId)
+                                        {
+                                            ProcessOrderWS = true;
+                                        }
+                                        else
+                                        {
+                                            ProcessOrderWS = false;
+                                        }
+                                    }
+                                 
+
+
+                                    if (ProcessOrderWS == true)
+                                    {
+
+                                        if (TD.Children().LastOrDefault()["price"] != null)
+                                        {
+                                            PriceCheck = (decimal?)TD.Children().LastOrDefault()["price"];
+                                        }
+                                        if (TD.Children().LastOrDefault()["stopPx"] != null)
+                                        {                                           
+                                            StopPriceCheck = (decimal?)TD.Children().LastOrDefault()["stopPx"];
+                                        }
+
+                                        if (TD.Children().LastOrDefault()["ordStatus"] != null || SymbolOrder.StopPx != StopPriceCheck || SymbolOrder.Price != PriceCheck)
+                                        {
+                                            OrderChange = true;
+                                        }
+
+
+
+                                        if (TD.Children().LastOrDefault()["symbol"] != null)
+                                        {
+                                            SymbolOrder.Symbol = (string)TD.Children().LastOrDefault()["symbol"];
+                                        }
+                                        if (TD.Children().LastOrDefault()["orderQty"] != null)
+                                        {
+                                            SymbolOrder.OrderQty = (int?)TD.Children().LastOrDefault()["orderQty"];
+
+                                        }
+                                        if (TD.Children().LastOrDefault()["ordType"] != null)
+                                        {
+                                            SymbolOrder.OrdType = (string)TD.Children().LastOrDefault()["ordType"];
+
+                                        }
+                                        if (TD.Children().LastOrDefault()["ordStatus"] != null)
+                                        {
+                                            SymbolOrder.OrdStatus = (string)TD.Children().LastOrDefault()["ordStatus"];
+
+                                        }
+                                        if (TD.Children().LastOrDefault()["orderID"] != null)
+                                        {
+                                            SymbolOrder.OrderId = (string)TD.Children().LastOrDefault()["orderID"];
+                                        }
+                                        if (TD.Children().LastOrDefault()["side"] != null)
+                                        {
+                                            SymbolOrder.Side = (string)TD.Children().LastOrDefault()["side"];
+
+                                        }
+                                        if (TD.Children().LastOrDefault()["price"] != null)
+                                        {
+                                            SymbolOrder.Price = (decimal?)TD.Children().LastOrDefault()["price"];
+                                            PriceCheck = (decimal?)TD.Children().LastOrDefault()["price"];
+                                        }
+                                        if (TD.Children().LastOrDefault()["displayQty"] != null)
+                                        {
+                                            SymbolOrder.DisplayQty = (int?)TD.Children().LastOrDefault()["displayQty"];
+
+                                        }
+
+                                        if (TD.Children().LastOrDefault()["workingIndicator"] != null)
+                                        {
+                                            SymbolOrder.WorkingIndicator = (bool?)TD.Children().LastOrDefault()["workingIndicator"];
+                                        }
+
+                                        if (TD.Children().LastOrDefault()["stopPx"] != null)
+                                        {
+                                            SymbolOrder.StopPx = (decimal?)TD.Children().LastOrDefault()["stopPx"];
+                                            StopPriceCheck = (decimal?)TD.Children().LastOrDefault()["stopPx"];
+                                        }
+
+                                        if (TD.Children().LastOrDefault()["timeInForce"] != null)
+                                        {
+                                            SymbolOrder.TimeInForce = (string)TD.Children().LastOrDefault()["timeInForce"];
+                                        }
+
+                                        if (TD.Children().LastOrDefault()["leavesQty"] != null)
+                                        {
+                                            SymbolOrder.LeavesQty = (int?)TD.Children().LastOrDefault()["leavesQty"];
+                                        }
+                                        if (TD.Children().LastOrDefault()["cumQty"] != null)
+                                        {
+                                            SymbolOrder.CumQty = (int?)TD.Children().LastOrDefault()["cumQty"];
+                                        }
+                                        if (TD.Children().LastOrDefault()["timestamp"] != null)
+                                        {
+                                            SymbolOrder.TimeStamp = (DateTime)TD.Children().LastOrDefault()["timestamp"];
+                                        }
+
+                                        FirstOrderProcess = false;
+
+                                    }
                                 }
                             }
 
@@ -1382,241 +1543,345 @@ namespace BitmexSampleBotGoran
                 SetBotMode(); // We only need to set bot mode if bot is running
                 btnAutomatedTrading.Text = "Stop - " + Mode; // So we can see what the mode of the bot is while running
             }
-            CandlesFirstTime = true;
+            //CandlesFirstTime = true;
 
         }
         
         private void SetBotMode ()
         {
             // This is where we determine what mode bot is in
-            if(rdoBuy.Checked)
+
+            switch (ddlStrategyType.SelectedItem.ToString())
             {
+                case "Strat1":
 
-                #region OldBuyCheck
-                //if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
-                //{
-                //    // Did the last full candle have MA1 cross above MA2?  We'll need to buy now
-                //    Mode = "Buy";
-                //}
-                //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 >= Candles[2].MA2))
-                //{
-                //    // Did the last full candle have MA1 cross below MA2?  We'll need to close any open position.
-                //    Mode = "CloseAndWait";
-                //}
-                //else if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 > Candles[2].MA2))
-                //{
-                //    // If no crossover, is MA1 still above MA2?  We'll need to leave our position open.
-                //    Mode = "Wait";
-                //}
-                //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 < Candles[2].MA2))
-                //{
-                //    // If no crossover, is MA1 still below MA2?  We'll need to make sure we don't have a position open.
-                //    Mode = "CloseAndWait";
-                //}
+                if (rdoBuy.Checked)
+                {
 
-                // MACD Example
-                //if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine <= Candles[1].MACDSignalLine) && (Candles[0].Close < Candles[0].BBUpper)) // Most recently closed candle crossed over up
-                #endregion OldBuyCheck
+                    #region OldBuyCheck
+                    //if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
+                    //{
+                    //    // Did the last full candle have MA1 cross above MA2?  We'll need to buy now
+                    //    Mode = "Buy";
+                    //}
+                    //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 >= Candles[2].MA2))
+                    //{
+                    //    // Did the last full candle have MA1 cross below MA2?  We'll need to close any open position.
+                    //    Mode = "CloseAndWait";
+                    //}
+                    //else if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 > Candles[2].MA2))
+                    //{
+                    //    // If no crossover, is MA1 still above MA2?  We'll need to leave our position open.
+                    //    Mode = "Wait";
+                    //}
+                    //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 < Candles[2].MA2))
+                    //{
+                    //    // If no crossover, is MA1 still below MA2?  We'll need to make sure we don't have a position open.
+                    //    Mode = "CloseAndWait";
+                    //}
 
-                if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 1))
-                {
-                    Mode = "Wait";
-                    Dblcheck = 0;
-                    DblcheckSell = 0;
-                }
-                else if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 2) && (Candles[2].TDUoD == "Down") && (Candles[2].TDSeq == 1))
-                {
-                    Mode = "Wait";
-                    Dblcheck = 0;
-                    DblcheckSell = 0;
-                }
-                else if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
-                {
-                    // Did the last full candle have MACDLine cross above MACDSignalLine?  We'll need to buy now.
-                    Dblcheck++;
-                    DblcheckSell = 0;
-                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && Dblcheck >= 16)
+                    // MACD Example
+                    //if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine <= Candles[1].MACDSignalLine) && (Candles[0].Close < Candles[0].BBUpper)) // Most recently closed candle crossed over up
+                    #endregion OldBuyCheck
+
+                    if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 1))
+                    {
+                        Mode = "Wait";
+                        Dblcheck = 0;
+                        DblcheckSell = 0;
+                    }
+                    else if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 2) && (Candles[2].TDUoD == "Down") && (Candles[2].TDSeq == 1))
+                    {
+                        Mode = "Wait";
+                        Dblcheck = 0;
+                        DblcheckSell = 0;
+                    }
+                    else if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
+                    {
+                        // Did the last full candle have MACDLine cross above MACDSignalLine?  We'll need to buy now.
+                        Dblcheck++;
+                        DblcheckSell = 0;
+                        if (ddlCandleTimes.SelectedItem.ToString() == "1m" && Dblcheck >= 16)
+                        {
+                            Mode = "Buy";
+                        }
+                        else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && Dblcheck >= 80)
+                        {
+                            Mode = "Buy";
+                        }
+                        else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && Dblcheck >= 960)
+                        {
+                            Mode = "Buy";
+                        }
+                        else
+                        {
+                            Mode = "Wait";
+                        }
+
+                    }
+                    else if ((Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1) && (Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 2) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
                     {
                         Mode = "Buy";
+                        Dblcheck = 0;
+                        DblcheckSell = 0;
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && Dblcheck >= 80)
-                    {
-                        Mode = "Buy";
-                    }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && Dblcheck >= 960)
-                    {
-                        Mode = "Buy";
-                    }
+
+                    #region OldSellCheck
+                    //else if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine >= Candles[1].MACDSignalLine))
+                    //{
+                    //    // Did the last full candle have MACDLine cross below MACDSignalLine?  We'll need to close any open position.
+                    //    Mode = "CloseAndWait";
+                    //    Dblcheck = 0;
+                    //    DblcheckSell = 0;
+                    //}
+                    //else if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine > Candles[1].MACDSignalLine))
+                    //{
+                    //    // If no crossover, is MACDLine still above MACDSignalLine? We'll need to leave our position open.
+                    //    Mode = "Wait";
+                    //    Dblcheck = 0;
+                    //    DblcheckSell = 0;
+                    //}
+                    //else if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine < Candles[1].MACDSignalLine))
+                    //{
+                    //    // If no crossover, is MACDLine still below MACDSignalLine? We'll need to make sure we don't have a position open.
+                    //    Mode = "CloseAndWait";
+                    //    Dblcheck = 0;
+                    //    DblcheckSell = 0;
+                    //}
+                    #endregion OldSellCheck
                     else
                     {
                         Mode = "Wait";
+                        Dblcheck = 0;
+                        DblcheckSell = 0;
                     }
 
                 }
-                else if ((Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1) && (Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 2) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
+                else if(rdoSell.Checked)
                 {
-                    Mode = "Buy";
-                    Dblcheck = 0;
-                    DblcheckSell = 0;
-                }
-
-                #region OldSellCheck
-                //else if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine >= Candles[1].MACDSignalLine))
-                //{
-                //    // Did the last full candle have MACDLine cross below MACDSignalLine?  We'll need to close any open position.
-                //    Mode = "CloseAndWait";
-                //    Dblcheck = 0;
-                //    DblcheckSell = 0;
-                //}
-                //else if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine > Candles[1].MACDSignalLine))
-                //{
-                //    // If no crossover, is MACDLine still above MACDSignalLine? We'll need to leave our position open.
-                //    Mode = "Wait";
-                //    Dblcheck = 0;
-                //    DblcheckSell = 0;
-                //}
-                //else if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine < Candles[1].MACDSignalLine))
-                //{
-                //    // If no crossover, is MACDLine still below MACDSignalLine? We'll need to make sure we don't have a position open.
-                //    Mode = "CloseAndWait";
-                //    Dblcheck = 0;
-                //    DblcheckSell = 0;
-                //}
-                #endregion OldSellCheck
-                else
-                {
-                    Mode = "Wait";
-                    Dblcheck = 0;
-                    DblcheckSell = 0;
-                }
-
-            }
-            else if(rdoSell.Checked)
-            {
-                #region OldSellCheck2
-                //if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
-                //{
-                //    // Did the last full candle have MA1 cross above MA2?  We'll need to close any open position.
-                //    Mode = "CloseAndWait";
-                //}
-                //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 >= Candles[2].MA2))
-                //{
-                //    // Did the last full candle have MA1 cross below MA2?  We'll need to sell now
-                //    Mode = "Sell";
-                //}
-                //else if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 > Candles[2].MA2))
-                //{
-                //    // If no crossover, is MA1 still above MA2?  We'll need to make sure we don't have a position open.
-                //    Mode = "CloseAndWait";
-                //}
-                //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 < Candles[2].MA2))
-                //{
-                //    // If no crossover, is MA1 still below MA2?  We'll need to leave our position open.
-                //    Mode = "Wait";
-                //}
+                    #region OldSellCheck2
+                    //if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
+                    //{
+                    //    // Did the last full candle have MA1 cross above MA2?  We'll need to close any open position.
+                    //    Mode = "CloseAndWait";
+                    //}
+                    //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 >= Candles[2].MA2))
+                    //{
+                    //    // Did the last full candle have MA1 cross below MA2?  We'll need to sell now
+                    //    Mode = "Sell";
+                    //}
+                    //else if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 > Candles[2].MA2))
+                    //{
+                    //    // If no crossover, is MA1 still above MA2?  We'll need to make sure we don't have a position open.
+                    //    Mode = "CloseAndWait";
+                    //}
+                    //else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 < Candles[2].MA2))
+                    //{
+                    //    // If no crossover, is MA1 still below MA2?  We'll need to leave our position open.
+                    //    Mode = "Wait";
+                    //}
 
 
-                //if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine <= Candles[1].MACDSignalLine))// Most recent closed candle crossed over up
-                //{
-                //    // Did the last full candle have MA1 cross above MA2?  We'll need to close any open position.
-                //    Mode = "CloseAndWait";
-                //    DblcheckSell = 0;
-                //    Dblcheck = 0;
-                //}
+                    //if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine <= Candles[1].MACDSignalLine))// Most recent closed candle crossed over up
+                    //{
+                    //    // Did the last full candle have MA1 cross above MA2?  We'll need to close any open position.
+                    //    Mode = "CloseAndWait";
+                    //    DblcheckSell = 0;
+                    //    Dblcheck = 0;
+                    //}
 
-                //if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine >= Candles[1].MACDSignalLine) && (Candles[0].Close > Candles[0].BBLower))
-                #endregion OldSellCheck2
+                    //if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine >= Candles[1].MACDSignalLine) && (Candles[0].Close > Candles[0].BBLower))
+                    #endregion OldSellCheck2
 
-                if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1))
-                {
-                    Mode = "Wait";
-                    Dblcheck = 0;
-                    DblcheckSell = 0;
-                }
-                else if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 2) && (Candles[2].TDUoD == "Up") && (Candles[2].TDSeq == 1))
-                {
-                    Mode = "Wait";
-                    Dblcheck = 0;
-                    DblcheckSell = 0;
-                }
-                else if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
-                {
-                    // Did the last full candle have MA1 cross below MA2?  We'll need to sell now
-                    DblcheckSell++;
-                    Dblcheck = 0;
+                    if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1))
+                    {
+                        Mode = "Wait";
+                        Dblcheck = 0;
+                        DblcheckSell = 0;
+                    }
+                    else if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 2) && (Candles[2].TDUoD == "Up") && (Candles[2].TDSeq == 1))
+                    {
+                        Mode = "Wait";
+                        Dblcheck = 0;
+                        DblcheckSell = 0;
+                    }
+                    else if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
+                    {
+                        // Did the last full candle have MA1 cross below MA2?  We'll need to sell now
+                        DblcheckSell++;
+                        Dblcheck = 0;
                     
-                    if (ddlCandleTimes.SelectedItem.ToString() == "1m" && DblcheckSell >= 16)
-                    {
-                        Mode = "Sell";
+                        if (ddlCandleTimes.SelectedItem.ToString() == "1m" && DblcheckSell >= 16)
+                        {
+                            Mode = "Sell";
+                        }
+                        else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && DblcheckSell >= 80)
+                        {
+                            Mode = "Sell";
+                        }
+                        else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && DblcheckSell >= 960)
+                        {
+                            Mode = "Sell";
+                        }
+                        else
+                        {
+                            Mode = "Wait";
+                        }
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && DblcheckSell >= 80)
+                    else if ((Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 1) && (Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 2) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
                     {
                         Mode = "Sell";
+                        DblcheckSell = 0;
+                        Dblcheck = 0;
                     }
-                    else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && DblcheckSell >= 960)
+                    #region OldSellCheck3
+                    //else if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine > Candles[1].MACDSignalLine))
+                    //{
+                    //    // If no crossover, is MA1 still above MA2?  We'll need to make sure we don't have a position open.
+                    //    Mode = "CloseAndWait";
+                    //    DblcheckSell = 0;
+                    //    Dblcheck = 0;
+                    //}
+                    //else if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine < Candles[1].MACDSignalLine))
+                    //{
+                    //    // If no crossover, is MA1 still below MA2?  We'll need to leave our position open.
+                    //    Mode = "Wait";
+                    //    DblcheckSell = 0;
+                    //    Dblcheck = 0;
+                    //}
+                    #endregion OldSellCheck3
+                    else
                     {
-                        Mode = "Sell";
+                        Mode = "Wait";
+                        DblcheckSell = 0;
+                        Dblcheck = 0;
+                    }
+                }
+
+                    decimal HourDifference = Convert.ToDecimal(((Candles1h[0].High - Candles1h[0].Low) / Candles1h[0].High) * 100);
+                    decimal HourDifferencePrevious = Convert.ToDecimal(((Candles1h[1].High - Candles1h[1].Low) / Candles1h[1].High) * 100);
+                    if (HourDifference >= Convert.ToDecimal(2.5) || HourDifferencePrevious >= Convert.ToDecimal(2.5))
+                    {
+                        Mode = "Wait";
+                        DblcheckSell = 0;
+                        Dblcheck = 0;
+                    }
+
+                #region OldSwitchCheck
+                //else if(rdoSwitch.Checked)
+                //{
+                //    if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
+                //    {
+                //        // Did the last full candle have MA1 cross above MA2?  Triggers a buy in switch setting.
+                //        Mode = "Buy";
+                //    }
+                //    else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 >= Candles[2].MA2))
+                //    {
+                //        // Did the last full candle have MA1 cross below MA2?  Triggers a sell in switch setting.
+                //        Mode = "Sell";
+                //    }
+                //    else if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 > Candles[2].MA2))
+                //    {
+                //        // If no crossover, is MA1 still above MA2?  Keep long positions open, close any shorts if they are still open.
+                //        Mode = "CloseShortsAndWait";
+                //    }
+                //    else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 < Candles[2].MA2))
+                //    {
+                //        // If no crossover, is MA1 still below MA2?  Keep short positions open, close any longs if they are still open.
+                //        Mode = "CloseLongsAndWait";
+                //    }
+                //}
+                #endregion OldSwitchCheck
+
+                break;
+
+                case "Strat2":
+
+
+                    if (rdoBuy.Checked)
+                    {
+
+                        if (ddlCandleTimes.SelectedIndex == 2)
+                        {
+                            if (Candles[0].TDUoD == "Up" && Candles[0].TDSeq <= 2)
+                            {
+                                Mode = "Buy";
+                            }
+                            else if(Candles[0].TDUoD == "Down" && Candles[0].TDSeq >= 9)
+                            {
+                                Mode = "Buy";
+                            }
+                            else
+                            {
+                                Mode = "Wait";
+                            }
+                        }
+                        else
+                        {
+                            if (Candles1h[0].TDUoD == "Up" && Candles1h[0].TDSeq <= 2)
+                            {
+                                Mode = "Buy";
+                            }
+                            else if (Candles1h[0].TDUoD == "Down" && Candles1h[0].TDSeq >= 9)
+                            {
+                                Mode = "Buy";
+                            }
+                            else
+                            {
+                                Mode = "Wait";
+                            }
+                        }
+                    }
+                    else if (rdoSell.Checked)
+                    {
+                        if (ddlCandleTimes.SelectedIndex == 2)
+                        {
+
+                            if (Candles[0].TDUoD == "Down" && Candles[0].TDSeq <= 2)
+                            {
+                                Mode = "Sell";
+                            }
+                            else if (Candles[0].TDUoD == "Up" && Candles[0].TDSeq >= 9)
+                            {
+                                Mode = "Sell";
+                            }
+                            else
+                            {
+                                Mode = "Wait";
+                            }
+                        }
+                        else
+                        {
+                            if (Candles1h[0].TDUoD == "Down" && Candles1h[0].TDSeq <= 2)
+                            {
+                                Mode = "Sell";
+                            }
+                            else if (Candles1h[0].TDUoD == "Up" && Candles1h[0].TDSeq >= 9)
+                            {
+                                Mode = "Sell";
+                            }
+                            else
+                            {
+                                Mode = "Wait";
+                            }
+                        }
                     }
                     else
                     {
                         Mode = "Wait";
                     }
-                }
-                else if ((Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 1) && (Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 2) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
-                {
-                    Mode = "Sell";
-                    DblcheckSell = 0;
-                    Dblcheck = 0;
-                }
-                #region OldSellCheck3
-                //else if ((Candles[0].MACDLine > Candles[0].MACDSignalLine) && (Candles[1].MACDLine > Candles[1].MACDSignalLine))
-                //{
-                //    // If no crossover, is MA1 still above MA2?  We'll need to make sure we don't have a position open.
-                //    Mode = "CloseAndWait";
-                //    DblcheckSell = 0;
-                //    Dblcheck = 0;
-                //}
-                //else if ((Candles[0].MACDLine < Candles[0].MACDSignalLine) && (Candles[1].MACDLine < Candles[1].MACDSignalLine))
-                //{
-                //    // If no crossover, is MA1 still below MA2?  We'll need to leave our position open.
-                //    Mode = "Wait";
-                //    DblcheckSell = 0;
-                //    Dblcheck = 0;
-                //}
-                #endregion OldSellCheck3
-                else
-                {
-                    Mode = "Wait";
-                    DblcheckSell = 0;
-                    Dblcheck = 0;
-                }
+
+                    decimal HourDifferencess = Convert.ToDecimal(((Candles1h[0].High - Candles1h[0].Low) / Candles1h[0].High) * 100);
+                    decimal HourDifferencePreviousss = Convert.ToDecimal(((Candles1h[1].High - Candles1h[1].Low) / Candles1h[1].High) * 100);
+                    if (HourDifferencess >= Convert.ToDecimal(2.5) || HourDifferencePreviousss >= Convert.ToDecimal(2.5))
+                    {
+                        Mode = "Wait";                        
+                    }
+
+                    break;
             }
 
-            #region OldSwitchCheck
-            //else if(rdoSwitch.Checked)
-            //{
-            //    if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 <= Candles[2].MA2)) // Most recent closed candle crossed over up
-            //    {
-            //        // Did the last full candle have MA1 cross above MA2?  Triggers a buy in switch setting.
-            //        Mode = "Buy";
-            //    }
-            //    else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 >= Candles[2].MA2))
-            //    {
-            //        // Did the last full candle have MA1 cross below MA2?  Triggers a sell in switch setting.
-            //        Mode = "Sell";
-            //    }
-            //    else if ((Candles[1].MA1 > Candles[1].MA2) && (Candles[2].MA1 > Candles[2].MA2))
-            //    {
-            //        // If no crossover, is MA1 still above MA2?  Keep long positions open, close any shorts if they are still open.
-            //        Mode = "CloseShortsAndWait";
-            //    }
-            //    else if ((Candles[1].MA1 < Candles[1].MA2) && (Candles[2].MA1 < Candles[2].MA2))
-            //    {
-            //        // If no crossover, is MA1 still below MA2?  Keep short positions open, close any longs if they are still open.
-            //        Mode = "CloseLongsAndWait";
-            //    }
-            //}
-            #endregion OldSwitchCheck
+
         }
 
         private void tmrCandleUpdater_Tick(object sender, EventArgs e)
@@ -1632,10 +1897,12 @@ namespace BitmexSampleBotGoran
             if (chkUpdateCandles.Checked)
             {
                 tmrCandleUpdater.Start();
+                tmrCandleUpdaterhd.Start();
             }
             else
             {
                 tmrCandleUpdater.Stop();
+                tmrCandleUpdaterhd.Stop();
             }
         }
 
@@ -1656,20 +1923,110 @@ namespace BitmexSampleBotGoran
         // Set Buy or Sell
         private void AutoButtonCheck()
         {
-            if ((Candles[0].MACDHistorgram > 0 && Candles[1].MACDHistorgram > 0 && Candles[2].MACDHistorgram > 0 && Candles[3].MACDHistorgram > 0 && Candles[4].MACDHistorgram > 0) && Candles[0].RSI > 50)
+
+            switch (ddlStrategyType.SelectedItem.ToString())
             {
-                rdoSell.Checked = true;
-                rdoBuy.Checked = false;
-            }
-            else if ((Candles[0].MACDHistorgram < 0 && Candles[1].MACDHistorgram < 0 && Candles[2].MACDHistorgram < 0 && Candles[3].MACDHistorgram < 0 && Candles[4].MACDHistorgram < 0) && Candles[0].RSI < 50)
-            {
-                rdoSell.Checked = false;
-                rdoBuy.Checked = true;
+                case "Strat1":
+
+
+                    if ((Candles[0].MACDHistorgram > 0 && Candles[1].MACDHistorgram > 0 && Candles[2].MACDHistorgram > 0 && Candles[3].MACDHistorgram > 0 && Candles[4].MACDHistorgram > 0) && Candles[0].RSI > 50)
+                    {
+                        rdoSell.Checked = true;
+                        rdoBuy.Checked = false;
+                    }
+                    else if ((Candles[0].MACDHistorgram < 0 && Candles[1].MACDHistorgram < 0 && Candles[2].MACDHistorgram < 0 && Candles[3].MACDHistorgram < 0 && Candles[4].MACDHistorgram < 0) && Candles[0].RSI < 50)
+                    {
+                        rdoSell.Checked = false;
+                        rdoBuy.Checked = true;
+                    }
+
+                    if (HourCandleFiratTime == false)
+                    {
+                        decimal HourDifference = (Convert.ToDecimal(Candles1h[0].High) - Convert.ToDecimal(Candles1h[0].Low)) / Convert.ToDecimal(Candles1h[0].High) * Convert.ToDecimal(100);
+                        decimal HourDifferencePrevious = Convert.ToDecimal(((Candles1h[1].High - Candles1h[1].Low) / Candles1h[1].High) * 100);
+                        if (HourDifference >= Convert.ToDecimal(2.5) || HourDifferencePrevious >= Convert.ToDecimal(2.5))
+                        {
+                            rdoSell.Checked = false;
+                            rdoBuy.Checked = false;
+                        }
+                    }
+                    break;
+
+                case "Strat2":
+
+                    if (ddlCandleTimes.SelectedIndex == 2)
+                    { 
+
+                        if (Candles1d[0].TDUoD == "Down" && Candles[0].TDUoD == "Down")
+                        {
+                            rdoSell.Checked = true;
+                            rdoBuy.Checked = false;
+                        }
+                        else if (Candles1d[0].TDUoD == "Up" && Candles[0].TDUoD == "Up")
+                        {
+                            rdoSell.Checked = false;
+                            rdoBuy.Checked = true;
+                        }
+                        else
+                        {
+                            rdoSell.Checked = false;
+                            rdoBuy.Checked = false;
+                        }
+
+                        
+
+                    }
+                    else
+                    {
+                        if (Candles1d[0].TDUoD == "Down" && Candles1h[0].TDUoD == "Down")
+                        {
+                            rdoSell.Checked = true;
+                            rdoBuy.Checked = false;
+                        }
+                        else if (Candles1d[0].TDUoD == "Up" && Candles1h[0].TDUoD == "Up")
+                        {
+                            rdoSell.Checked = false;
+                            rdoBuy.Checked = true;
+                        }
+                        else
+                        {
+                            rdoSell.Checked = false;
+                            rdoBuy.Checked = false;
+                        }
+
+                        
+                    }
+
+
+                    decimal HourDifferencesttwo = (Convert.ToDecimal(Candles1h[0].High) - Convert.ToDecimal(Candles1h[0].Low)) / Convert.ToDecimal(Candles1h[0].High) * Convert.ToDecimal(100);
+                    decimal HourDifferencePrevioussttwo = Convert.ToDecimal(((Candles1h[1].High - Candles1h[1].Low) / Candles1h[1].High) * 100);
+                    if (HourDifferencesttwo >= Convert.ToDecimal(2.5) || HourDifferencePrevioussttwo >= Convert.ToDecimal(2.5))
+                    {
+                        rdoSell.Checked = false;
+                        rdoBuy.Checked = false;
+                    }                   
+
+
+                        break;
             }
         }
 
         private void btnAutomatedTrading_Click(object sender, EventArgs e)
         {
+            if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0)
+            {
+                TrailingProfitStartPrice = 1000000;
+                TrailingProfitExecutePrice = 999999;
+            }
+
+            if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0)
+            {
+                TrailingProfitStartPrice = 1;
+                TrailingProfitExecutePrice = 2;
+            }
+            txtTPStart.Text = TrailingProfitStartPrice.ToString();
+            txtTPExecute.Text = TrailingProfitExecutePrice.ToString();
+
             if (btnAutomatedTrading.Text == "Start")
             {
                 tmrAutotradeExecution.Start();
@@ -1696,6 +2053,8 @@ namespace BitmexSampleBotGoran
         {
             // OpenPositions = bitmex.GetOpenPositions(ActiveInstrument.Symbol);
             // OpenOrders = bitmex.GetOpenOrders(ActiveInstrument.Symbol);
+
+            
 
             bool OpenOrdercheck = false;
 
@@ -1764,6 +2123,49 @@ namespace BitmexSampleBotGoran
                 OpenOrdercheck = false;
             }
 
+
+
+            if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop")
+            {
+                if (SymbolPosition.CurrentQty > 0)
+                {
+                    if (SymbolOrder.StopPx > SymbolPosition.AvgEntryPrice)
+                    {
+                        TrailigProfitOrderOpen = true;
+                    }
+                    else
+                    {
+                        TrailigProfitOrderOpen = false;
+                    }
+                }
+
+                if (SymbolPosition.CurrentQty < 0)
+                {
+                    if (SymbolOrder.StopPx < SymbolPosition.AvgEntryPrice)
+                    {
+                        TrailigProfitOrderOpen = true;
+                    }
+                    else
+                    {
+                        TrailigProfitOrderOpen = false;
+                    }
+                }
+
+            }
+            else
+            {
+                TrailigProfitOrderOpen = false;
+            }
+
+            if (OpenOrdercheck == true && ((SymbolOrder.OrdType == "Stop" && TrailigProfitOrderOpen == true) || SymbolOrder.OrdType != "Stop"))
+            {
+                NotStopLoss = true;
+            }
+            else
+            {
+                NotStopLoss = false;
+            }
+
             if (SymbolPosition.IsOpen == false && OpenOrdercheck == false && AvaliableMargin < ((nudPercentToTrade.Value / 100) * Balance))
             {                
                 string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
@@ -1820,17 +2222,17 @@ namespace BitmexSampleBotGoran
                 StopLossActivate = false;
             }
 
-            if (!chkStopLoss.Checked && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop")
+            if (!chkStopLoss.Checked && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop" && TrailigProfitOrderOpen == false)
             {
                 string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
             }
 
-            if (chkStopLoss.Checked && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop" && SymbolPosition.CurrentQty > 0 && Prices[ActiveInstrument.Symbol] >= StopLossCancel && StopLossActivate == false)
+            if (chkStopLoss.Checked && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop" && TrailigProfitOrderOpen == false && SymbolPosition.CurrentQty > 0 && Prices[ActiveInstrument.Symbol] >= StopLossCancel && StopLossActivate == false)
             {
                 string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
             }
 
-            if (chkStopLoss.Checked && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop" && SymbolPosition.CurrentQty < 0 && Prices[ActiveInstrument.Symbol] <= StopLossCancel && StopLossActivate == false)
+            if (chkStopLoss.Checked && OpenOrdercheck == true && SymbolOrder.OrdType == "Stop" && TrailigProfitOrderOpen == false && SymbolPosition.CurrentQty < 0 && Prices[ActiveInstrument.Symbol] <= StopLossCancel && StopLossActivate == false)
             {
                 string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
             }
@@ -1839,7 +2241,7 @@ namespace BitmexSampleBotGoran
 
             if (SymbolPosition.IsOpen == true && chkStopLoss.Checked && StopLossActivate == true)
             {
-                if (OpenOrdercheck == true && SymbolOrder.OrdType != "Stop")
+                if (OpenOrdercheck == true && NotStopLoss == true)
                 {
                     string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
                 }
@@ -1853,7 +2255,7 @@ namespace BitmexSampleBotGoran
                     SLside = "Buy";
                 }
 
-                if (OpenOrdercheck == true && SymbolOrder.OrdType == "Stop")
+                if (OpenOrdercheck == true && SymbolOrder.OrdType == "Stop" && TrailigProfitOrderOpen == false)
                 {                    
                 }                
                 else
@@ -1861,129 +2263,504 @@ namespace BitmexSampleBotGoran
                     bitmex.MarketStopLoss(ActiveInstrument.Symbol, SLside, StopLossExecutePrice, Math.Abs(Convert.ToInt32(SymbolPosition.CurrentQty)));
                 }                
             }
-            
-            
-            //if (OpenPositions.Any() && !OpenOrders.Any())
-            if (SymbolPosition.IsOpen == true && OpenOrdercheck == false)
+
+            switch (ddlStrategyType.SelectedItem.ToString())
             {
-                bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
-                //if (OpenPositions[0].CurrentQty > 0)
-                if (SymbolPosition.CurrentQty > 0)
-                {
-                    // NEW TEST LIMIT CLOSE OPEN POSITON
-                    decimal UserPercent = 1 + ((Convert.ToDecimal(nudPercentEarn.Value) / 5) / 100);
-                    decimal PriceLCOP = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * UserPercent) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
-                    if (PriceLCOP < CalculateMarketOrderPrice("Sell"))
+                case "Strat1":
+
+                    TPTimerLimit = 150;
+                    txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
+
+                    if (TrailigProfitOrderOpen == true)
                     {
-                        string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, CalculateMarketOrderPrice("Sell"));
+                        bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
                     }
-                    else
+
+
+                 //if (OpenPositions.Any() && !OpenOrders.Any())
+                if (SymbolPosition.IsOpen == true && OpenOrdercheck == false)
+                {
+                    bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                    //if (OpenPositions[0].CurrentQty > 0)
+                    if (SymbolPosition.CurrentQty > 0)
                     {
-                        string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, PriceLCOP);
+                        // NEW TEST LIMIT CLOSE OPEN POSITON
+                        decimal UserPercent = 1 + ((Convert.ToDecimal(nudPercentEarn.Value) / 5) / 100);
+                        decimal PriceLCOP = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * UserPercent) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                        if (PriceLCOP < CalculateMarketOrderPrice("Sell"))
+                        {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, CalculateMarketOrderPrice("Sell"));
+                                }
+                        }
+                        else
+                        {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, PriceLCOP);
+                                }
+                        }
+                    }
+                    //else if (OpenPositions[0].CurrentQty < 0)
+                    else if (SymbolPosition.CurrentQty < 0)
+                    {
+                        // NEW TEST LIMIT CLOSE OPEN POSITON
+                        decimal UserPercent = ((Convert.ToDecimal(nudPercentEarn.Value) / 5) / 100);
+                        decimal UserPercentageAmount = Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * UserPercent;
+                        decimal PriceLCOP = Math.Floor((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - UserPercentageAmount) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                        if (PriceLCOP > CalculateMarketOrderPrice("Buy"))
+                        {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, CalculateMarketOrderPrice("Buy"));
+                                }
+                        }
+                        else
+                        {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, PriceLCOP);
+                                }
+                        }
                     }
                 }
-                //else if (OpenPositions[0].CurrentQty < 0)
-                else if (SymbolPosition.CurrentQty < 0)
-                {
-                    // NEW TEST LIMIT CLOSE OPEN POSITON
-                    decimal UserPercent = ((Convert.ToDecimal(nudPercentEarn.Value) / 5) / 100);
-                    decimal UserPercentageAmount = Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * UserPercent;
-                    decimal PriceLCOP = Math.Floor((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - UserPercentageAmount) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
-                    if (PriceLCOP > CalculateMarketOrderPrice("Buy"))
-                    {
-                        string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, CalculateMarketOrderPrice("Buy"));
-                    }
-                    else
-                    {
-                        string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, PriceLCOP);
-                    }
-                }
-            }
-            //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Sell"))
-            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Sell" && SymbolOrder.OrdType != "Stop")
-            {
-                goto SkipToEnd;
-            }
-            //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Buy"))
-            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop")
-            {
-                goto SkipToEnd;
-            }
-            //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Buy"))
-            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop")
-            {
-                if (rdoBuy.Checked)
+                //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Sell"))
+                else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Sell" && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
                 {
                     goto SkipToEnd;
                 }
-                else if (rdoSell.Checked)
-                {
-                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
-                }
-            }
-            //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Sell"))
-            else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop")
-            {
-                if (rdoBuy.Checked)
-                {                    
-                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
-                }
-                else if (rdoSell.Checked)
+                //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Buy"))
+                else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
                 {
                     goto SkipToEnd;
                 }
-            }
-            //else if (!OpenPositions.Any() && !OpenOrders.Any())
-            else if (SymbolPosition.IsOpen == false && OpenOrdercheck == false)
-            {
-                if (rdoBuy.Checked && Mode == "Buy")
+                //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Buy"))
+                else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
                 {
-                    AutoMakeOrder("Buy", Convert.ToInt32(nudAutoQuantity.Value));
-                }
-                else if (rdoSell.Checked && Mode == "Sell")
-                {
-                    AutoMakeOrder("Sell", Convert.ToInt32(nudAutoQuantity.Value));
-                }
-            }
-            //else if (!OpenPositions.Any() && OpenOrders.Any())
-            else if (SymbolPosition.IsOpen == false && OpenOrdercheck == true && SymbolOrder.OrdType != "Stop")
-            {
-                if (rdoBuy.Checked && SymbolOrder.Side == "Sell")
-                {
-                    if (Mode == "Buy")
+                    if (rdoBuy.Checked)
                     {
-                        string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
-                        AutoMakeOrder("Buy", Convert.ToInt32(nudAutoQuantity.Value));
+                        goto SkipToEnd;
                     }
-                    else if (Mode != "Buy")
+                    else if (rdoSell.Checked)
                     {
-                        string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            }
+                    }
+                }
+                //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Sell"))
+                else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
+                {
+                    if (rdoBuy.Checked)
+                    {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            }
+                    }
+                    else if (rdoSell.Checked)
+                    {
+                        goto SkipToEnd;
+                    }
+                }
+                //else if (!OpenPositions.Any() && !OpenOrders.Any())
+                else if (SymbolPosition.IsOpen == false && OpenOrdercheck == false && chkManualControl.Checked == false)
+                {
+                    if (rdoBuy.Checked && Mode == "Buy")
+                    {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                AutoMakeOrder("Buy", Convert.ToInt32(nudAutoQuantity.Value));
+                            }
+                    }
+                    else if (rdoSell.Checked && Mode == "Sell")
+                    {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                AutoMakeOrder("Sell", Convert.ToInt32(nudAutoQuantity.Value));
+                            }
+                    }
+                }
+                //else if (!OpenPositions.Any() && OpenOrders.Any())
+                else if (SymbolPosition.IsOpen == false && OpenOrdercheck == true && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
+                {
+                    if (rdoBuy.Checked && SymbolOrder.Side == "Sell")
+                    {
+                        if (Mode == "Buy")
+                        {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                    AutoMakeOrder("Buy", Convert.ToInt32(nudAutoQuantity.Value));
+                                }
+                        }
+                        else if (Mode != "Buy")
+                        {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                }
+                        }                    
+                    }
+                    else if (rdoSell.Checked && SymbolOrder.Side == "Buy")
+                    {
+                        if (Mode == "Sell")
+                        {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                    AutoMakeOrder("Sell", Convert.ToInt32(nudAutoQuantity.Value));
+                                }
+                        }
+                        else if (Mode != "Sell")
+                        {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                }
+                        }
+                    }
+
+                    if (UpStop == true && SymbolOrder.Side == "Buy")
+                    {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            }
+                    }
+                    if (DownStop == true && SymbolOrder.Side == "Sell")
+                    {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            }
+                    }
+                }
+
+                SkipToEnd:;
+
+                break;
+
+                case "Strat2":
+
+                    
+                    if (FirstTimeTPStrat == true)
+                    {
+                        if (OpenOrdercheck == true && (SymbolOrder.OrdType != "Stop" || TrailigProfitOrderOpen == true))
+                        {
+                            bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                        }
+                        
+                        FirstTimeTPStrat = false;
+                    }
+
+                    if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0 && TrailigProfitOrderOpen == false)
+                    {
+                        TrailingProfitStartPer = (Convert.ToDecimal(nudStartTrailingProfit.Value) / 5) / 100;
+                        TrailingProfitStartPrice = Math.Floor((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - (Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * TrailingProfitStartPer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                        TrailingProfitExecutePer = 1 + ((Convert.ToDecimal(nudExecuteTrailingProfit.Value) / 5) / 100);
+                        TrailingProfitExecutePrice = Math.Floor((Convert.ToDecimal(TrailingProfitStartPrice) * TrailingProfitExecutePer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                        txtTPStart.Text = TrailingProfitStartPrice.ToString();
+                        txtTPExecute.Text = TrailingProfitExecutePrice.ToString();
+                    }
+                    else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0 && TrailigProfitOrderOpen == false)
+                    {
+                        TrailingProfitStartPer = 1 + ((Convert.ToDecimal(nudStartTrailingProfit.Value) / 5) / 100);
+                        TrailingProfitStartPrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * TrailingProfitStartPer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                        TrailingProfitExecutePer = (Convert.ToDecimal(nudExecuteTrailingProfit.Value) / 5) / 100;
+                        TrailingProfitExecutePrice = Math.Ceiling((TrailingProfitStartPrice - (TrailingProfitStartPrice * TrailingProfitExecutePer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                        txtTPStart.Text = TrailingProfitStartPrice.ToString();
+                        txtTPExecute.Text = TrailingProfitExecutePrice.ToString();
+                    }
+
+
+                    //Strat 2
+
+                    if (SymbolPosition.IsOpen == true && OpenOrdercheck == false)
+                    {
+                        //if (OrderChange == true)
+                        //{
+                        //    OrderChange = false;
+                        //}
+                        //else
+                        //{
+                        //    bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                        //}
+
+                        if (SymbolPosition.CurrentQty > 0)
+                        {
+                            TPSide = "Sell";
+                        }
+                        else if (SymbolPosition.CurrentQty < 0)
+                        {
+                            TPSide = "Buy";
+                        }
+
+
+                        if (SymbolPosition.CurrentQty > 0)
+                        {
+                            if (Prices[ActiveInstrument.Symbol] >= TrailingProfitStartPrice)
+                            {
+                                TrailingProfitStartPrice = Prices[ActiveInstrument.Symbol];
+                                TrailingProfitExecutePrice = Math.Ceiling((TrailingProfitStartPrice - (TrailingProfitStartPrice * TrailingProfitExecutePer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                                txtTPStart.Text = TrailingProfitStartPrice.ToString();
+                                txtTPExecute.Text = TrailingProfitExecutePrice.ToString();
+
+                                if (PositionChange == true)
+                                {
+                                    PositionChange = false;
+                                }
+                                else
+                                {
+                                    bitmex.MarketStopLoss(ActiveInstrument.Symbol, TPSide, TrailingProfitExecutePrice, Math.Abs(Convert.ToInt32(SymbolPosition.CurrentQty)));
+                                }
+                            }
+                        }
+                        else if (SymbolPosition.CurrentQty < 0)
+                        {
+                            if (Prices[ActiveInstrument.Symbol] <= TrailingProfitStartPrice)
+                            {
+                                TrailingProfitStartPrice = Prices[ActiveInstrument.Symbol];
+                                TrailingProfitExecutePrice = Math.Floor((Convert.ToDecimal(TrailingProfitStartPrice) * TrailingProfitExecutePer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                                txtTPStart.Text = TrailingProfitStartPrice.ToString();
+                                txtTPExecute.Text = TrailingProfitExecutePrice.ToString();
+                                if (PositionChange == true)
+                                {
+                                    PositionChange = false;
+                                }
+                                else
+                                {
+                                    bitmex.MarketStopLoss(ActiveInstrument.Symbol, TPSide, TrailingProfitExecutePrice, Math.Abs(Convert.ToInt32(SymbolPosition.CurrentQty)));
+                                }
+                            }
+                        }
+
+                    }
+                    else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && TrailigProfitOrderOpen == true)
+                    {
+                        if (SymbolPosition.CurrentQty > 0)
+                        {
+                            if (Prices[ActiveInstrument.Symbol] > TrailingProfitStartPrice)
+                            {
+                                TrailingProfitStartPrice = Prices[ActiveInstrument.Symbol];
+                                TrailingProfitExecutePrice = Math.Ceiling((TrailingProfitStartPrice - (TrailingProfitStartPrice * TrailingProfitExecutePer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                                txtTPStart.Text = TrailingProfitStartPrice.ToString();
+                                txtTPExecute.Text = TrailingProfitExecutePrice.ToString();
+
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    bitmex.EditOrderPriceMarketStop(SymbolOrder.OrderId, TrailingProfitExecutePrice);
+                                }
+                            }
+                        }
+                        else if (SymbolPosition.CurrentQty < 0)
+                        {
+                            if (Prices[ActiveInstrument.Symbol] < TrailingProfitStartPrice)
+                            {
+                                TrailingProfitStartPrice = Prices[ActiveInstrument.Symbol];
+                                TrailingProfitExecutePrice = Math.Floor((Convert.ToDecimal(TrailingProfitStartPrice) * TrailingProfitExecutePer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                                txtTPStart.Text = TrailingProfitStartPrice.ToString();
+                                txtTPExecute.Text = TrailingProfitExecutePrice.ToString();
+
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    bitmex.EditOrderPriceMarketStop(SymbolOrder.OrderId, TrailingProfitExecutePrice);
+                                }
+                            }
+                        }
+                    }
+                    else if (SymbolPosition.IsOpen == false && OpenOrdercheck == false && chkManualControl.Checked == false)
+                    {
+                        TPTimerLimit++;
+                        txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
+
+                        if (TPTimerLimit >= 150)
+                        {
+                            TPTimerLimit = 0;
+                            txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
+
+                            if (rdoBuy.Checked && Mode == "Buy")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    AutoMakeOrder("Buy", Convert.ToInt32(nudAutoQuantity.Value));
+                                }
+                            }
+                            else if (rdoSell.Checked && Mode == "Sell")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    AutoMakeOrder("Sell", Convert.ToInt32(nudAutoQuantity.Value));
+                                }
+                            }
+                        }
+
+
+
                     }                    
-                }
-                else if (rdoSell.Checked && SymbolOrder.Side == "Buy")
-                {
-                    if (Mode == "Sell")
+                    else if (SymbolPosition.IsOpen == false && OpenOrdercheck == true && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
                     {
-                        string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
-                        AutoMakeOrder("Sell", Convert.ToInt32(nudAutoQuantity.Value));
-                    }
-                    else if (Mode != "Sell")
-                    {
-                        string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
-                    }
-                }
 
-                if (UpStop == true && SymbolOrder.Side == "Buy")
-                {
-                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
-                }
-                if (DownStop == true && SymbolOrder.Side == "Sell")
-                {
-                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
-                }
+                        if (rdoBuy.Checked && SymbolOrder.Side == "Sell")
+                        {
+                            if (Mode == "Buy")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                    AutoMakeOrder("Buy", Convert.ToInt32(nudAutoQuantity.Value));
+                                }
+                            }
+                            else if (Mode != "Buy")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                }
+                            } 
+                        }
+                        else if (rdoSell.Checked && SymbolOrder.Side == "Buy")
+                        {
+                            if (Mode == "Sell")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                    AutoMakeOrder("Sell", Convert.ToInt32(nudAutoQuantity.Value));
+                                }
+                            }
+                            else if (Mode != "Sell")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                }
+                            }
+                        }
+
+                        if (Mode == "Wait")
+                        {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            }
+                        }
+
+                    }
+                    else if (SymbolPosition.IsOpen == false && OpenOrdercheck == true && TrailigProfitOrderOpen == true && chkManualControl.Checked == false)
+                    {
+                        if (OrderChange == true)
+                        {
+                            OrderChange = false;
+                        }
+                        else
+                        {
+                            bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                        }
+                    }
+                        break;
             }
 
-            SkipToEnd:;
+
+             
 
             #region ORIGINAL BACKUP
 
@@ -2429,13 +3206,23 @@ namespace BitmexSampleBotGoran
                 }
                 else if (SymbolOrder.OrdType == "Stop")
                 {
-                    txtOrderPrice.Text = SymbolOrder.StopPx.ToString();
+                    txtOrderPrice.Text = "";
                 }
                 //txtOrderPrice.Text = SymbolOrder.Price.ToString();
                 //txtOrderSize.Text = SymbolOrder.OrderQty.ToString();
                 txtOrderStatus.Text = SymbolOrder.OrdStatus;
                 txtOrderSide.Text = SymbolOrder.Side;
                 txtOrderType.Text = SymbolOrder.OrdType;
+
+                if (SymbolOrder.OrdType != "Stop")
+                {
+                    txtTrailingProfitStart.Text = "";
+                }
+                else if (SymbolOrder.OrdType == "Stop")
+                {
+                    txtTrailingProfitStart.Text = SymbolOrder.StopPx.ToString();
+                }
+
             }
             else
             {
@@ -2444,6 +3231,7 @@ namespace BitmexSampleBotGoran
                 txtOrderSide.Text = "";
                 txtOrderStatus.Text = "";
                 txtOrderType.Text = "";
+                txtTrailingProfitStart.Text = "";
             }
         }
 
@@ -2503,6 +3291,7 @@ namespace BitmexSampleBotGoran
             UpdatePrice();
             UpdatePositionInfo();
             UpdateOrderInfo();
+            txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
         }
 
         
@@ -2632,6 +3421,714 @@ namespace BitmexSampleBotGoran
             InitializeWebSocket();
             InitializeSymbolSpecificData();
             InitializeWalletWebSocket();
+        }
+
+        private void UpdateCandles1h()
+        {
+            HourCandleFiratTime = false;
+            #region ORIGINAL CANDLES
+            // Get Candles
+
+            //if (CandlesFirstTime == false)
+            //{
+            Candles1h = bitmex.GetCandleHistory1h(ActiveInstrument.Symbol, 500, "1h");
+            //}
+
+
+
+
+            Candles1h = Candles1h.OrderBy(a => a.TimeStamp).ToList();
+
+
+
+            // For TD Sequential
+            int TimeFrameTDSeq1h = 0;
+            string UpOrDown1h = "Down";
+            int UpValue1h = 1;
+            int DownValue1h = 1;
+
+            //  Set indicator info
+            foreach (Candle1h c in Candles1h)
+            {
+                c.PCC = Candles1h.Where(a => a.TimeStamp < c.TimeStamp).Count();
+
+                #region TDSeq
+
+                if (c.PCC >= 4)
+                {
+
+                    double? FourCandlesBefore1h = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(TimeFrameTDSeq1h).Close;
+                    if (FourCandlesBefore1h < c.Close)
+                    {
+                        UpOrDown1h = "Up";
+                        DownValue1h = 1;
+                        c.TDSeq = UpValue1h;
+                        c.TDUoD = UpOrDown1h;
+                        UpValue1h++;
+                    }
+                    else if (FourCandlesBefore1h > c.Close)
+                    {
+                        UpOrDown1h = "Down";
+                        UpValue1h = 1;
+                        c.TDSeq = DownValue1h;
+                        c.TDUoD = UpOrDown1h;
+                        DownValue1h++;
+                    }
+                    else if (FourCandlesBefore1h == c.Close)
+                    {
+                        UpValue1h = 1;
+                        DownValue1h = 1;
+                        c.TDUoD = "Equal";
+                        c.TDSeq = 0;
+                    }
+
+                    TimeFrameTDSeq1h = TimeFrameTDSeq1h + 1;
+                }
+
+                #endregion TDSeq
+
+
+
+                int MA1Period1h = Convert.ToInt32(nudMA1.Value);
+                int MA2Period1h = Convert.ToInt32(nudMA2.Value);
+
+                if (c.PCC >= MA1Period1h)
+                {
+                    // Get the moving average over the last x periods using closing ** Includes current candle **
+                    c.MA1 = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(MA1Period1h).Average(a => a.Close);
+                    // With not enough candles, we don't set to 0, we leave it null
+                    if (c.MA1 != null) { c.MA1 = Math.Round(Convert.ToDouble(c.MA1), 4); }
+                }
+
+                if (c.PCC >= MA2Period1h)
+                {
+                    // Get the moving average over the last x periods using closing ** Includes current candle **
+                    c.MA2 = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(MA2Period1h).Average(a => a.Close);
+                    // With not enough candles, we don't set to 0, we leave it null
+                    if (c.MA2 != null) { c.MA2 = Math.Round(Convert.ToDouble(c.MA2), 4); }
+                }
+
+                if (c.PCC >= BBLength1h)
+                {
+                    // BBMiddle is just a 20 period moving average
+                    c.BBMiddle = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(BBLength1h).Average(a => a.Close);
+
+                    // Calcualting Standard Deviation
+                    double total_squared1h = 0;
+                    double total_for_average1h = Convert.ToDouble(Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(BBLength1h).Sum(a => a.Close));
+                    foreach (Candle1h cb in Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(BBLength1h).ToList())
+                    {
+                        total_squared1h += Math.Pow(Convert.ToDouble(cb.Close), 2);
+                    }
+                    double stdev1h = Math.Sqrt((total_squared1h - (Math.Pow(total_for_average1h, 2) / BBLength1h)) / BBLength1h);
+                    c.BBUpper = c.BBMiddle + (stdev1h * BBMultiplier1h);
+                    c.BBLower = c.BBMiddle - (stdev1h * BBMultiplier1h);
+
+                    if (c.BBMiddle != null) { c.BBMiddle = Math.Round(Convert.ToDouble(c.BBMiddle), 4); }
+                    if (c.BBUpper != null) { c.BBUpper = Math.Round(Convert.ToDouble(c.BBUpper), 4); }
+                    if (c.BBLower != null) { c.BBLower = Math.Round(Convert.ToDouble(c.BBLower), 4); }
+                }
+
+                if (c.PCC >= EMA1Period1h)
+                {
+                    double p11h = EMA1Period1h + 1;
+                    double EMAMultiplier1h = Convert.ToDouble(2 / p11h);
+
+                    if (c.PCC == EMA1Period1h)
+                    {
+                        // This is our seed EMA, using SMA of EMA1 period for EMA 1
+                        c.EMA1 = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(EMA1Period1h).Average(a => a.Close);
+                    }
+                    else
+                    {
+                        double? LastEMA1h = Candles1h.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().EMA1;
+                        c.EMA1 = ((c.Close - LastEMA1h) * EMAMultiplier1h) + LastEMA1h;
+                    }
+                    if (c.EMA1 != null) { c.EMA1 = Math.Round(Convert.ToDouble(c.EMA1), 4); }
+                }
+
+                if (c.PCC >= EMA2Period1h)
+                {
+                    double p11h = EMA2Period1h + 1;
+                    double EMAMultiplier1h = Convert.ToDouble(2 / p11h);
+
+                    if (c.PCC == EMA2Period1h)
+                    {
+                        // This is our seed EMA, using SMA
+                        c.EMA2 = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(EMA2Period1h).Average(a => a.Close);
+                    }
+                    else
+                    {
+                        double? LastEMA1h = Candles1h.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().EMA2;
+                        c.EMA2 = ((c.Close - LastEMA1h) * EMAMultiplier1h) + LastEMA1h;
+                    }
+                    if (c.EMA2 != null) { c.EMA2 = Math.Round(Convert.ToDouble(c.EMA2), 4); }
+                }
+
+                if (c.PCC >= EMA3Period1h)
+                {
+                    double p11h = EMA3Period1h + 1;
+                    double EMAMultiplier1h = Convert.ToDouble(2 / p11h);
+
+                    if (c.PCC == EMA3Period1h)
+                    {
+                        // This is our seed EMA, using SMA
+                        c.EMA3 = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(EMA3Period1h).Average(a => a.Close);
+                    }
+                    else
+                    {
+                        double? LastEMA1h = Candles1h.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().EMA3;
+                        c.EMA3 = ((c.Close - LastEMA1h) * EMAMultiplier1h) + LastEMA1h;
+                    }
+                    if (c.EMA3 != null) { c.EMA3 = Math.Round(Convert.ToDouble(c.EMA3), 4); }
+                }
+
+                // MACD
+                // We can only do this if we have the longest EMA period, EMA1
+                if (c.PCC >= EMA1Period1h)
+                {
+
+                    double p11h = MACDEMAPeriod1h + 1;
+                    double MACDEMAMultiplier1h = Convert.ToDouble(2 / p11h);
+
+                    c.MACDLine = (c.EMA2 - c.EMA1); // default is 12EMA - 26EMA
+                    if (c.PCC == EMA1Period1h + MACDEMAPeriod1h)
+                    {
+                        // Set this to SMA of MACDLine to seed it
+                        c.MACDSignalLine = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(MACDEMAPeriod1h).Average(a => (a.MACDLine));
+                    }
+                    else if (c.PCC > EMA1Period1h + MACDEMAPeriod1h)
+                    {
+                        // We can calculate this EMA based off past candle EMAs
+                        double? LastMACDSignalLine1h = Candles1h.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().MACDSignalLine;
+                        c.MACDSignalLine = ((c.MACDLine - LastMACDSignalLine1h) * MACDEMAMultiplier1h) + LastMACDSignalLine1h;
+                    }
+                    c.MACDHistorgram = c.MACDLine - c.MACDSignalLine;
+
+                    if (c.MACDSignalLine != null) { c.MACDSignalLine = Math.Round(Convert.ToDouble(c.MACDSignalLine), 4); }
+                    if (c.MACDLine != null) { c.MACDLine = Math.Round(Convert.ToDouble(c.MACDLine), 4); }
+                    if (c.MACDHistorgram != null) { c.MACDHistorgram = Math.Round(Convert.ToDouble(c.MACDHistorgram), 4); }
+
+                }
+
+                #region ATR
+                // ATR, setting TR
+                if (c.PCC == 0)
+                {
+                    c.SetTR(c.High);
+                }
+                else if (c.PCC > 0)
+                {
+                    c.SetTR(Candles1h.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().Close);
+                }
+
+                // Setting ATRs
+                if (c.PCC == ATR1Period1h - 1)
+                {
+                    c.ATR1 = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(ATR1Period1h).Average(a => a.TR);
+                }
+                else if (c.PCC > ATR1Period1h - 1)
+                {
+                    double p11h = ATR1Period1h + 1;
+                    double ATR1Multiplier1h = Convert.ToDouble(2 / p11h);
+                    double? LastATR11h = Candles1h.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().ATR1;
+                    c.ATR1 = ((c.TR - LastATR11h) * ATR1Multiplier1h) + LastATR11h;
+                }
+
+
+                if (c.PCC == ATR2Period1h - 1)
+                {
+                    c.ATR2 = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(ATR2Period1h).Average(a => a.TR);
+                }
+                else if (c.PCC > ATR2Period1h - 1)
+                {
+                    double p11h = ATR2Period1h + 1;
+                    double ATR2Multiplier1h = Convert.ToDouble(2 / p11h);
+                    double? LastATR21h = Candles1h.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().ATR2;
+                    c.ATR2 = ((c.TR - LastATR21h) * ATR2Multiplier1h) + LastATR21h;
+                }
+                if (c.TR != null) { c.TR = Math.Round(Convert.ToDouble(c.TR), 4); }
+                if (c.ATR1 != null) { c.ATR1 = Math.Round(Convert.ToDouble(c.ATR1), 4); }
+                if (c.ATR2 != null) { c.ATR2 = Math.Round(Convert.ToDouble(c.ATR2), 4); }
+                #endregion ATR
+
+                #region RSI
+                // For RSI
+                if (c.PCC == RSIPeriod1h - 1)
+                {
+                    // AVG Gain is average of just gains, for all periods, (14), not just periods with gains.  Same goes for losses but with losses.
+                    c.AVGGain = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Where(a => a.GainOrLoss > 0).Take(RSIPeriod1h).Sum(a => a.GainOrLoss) / RSIPeriod1h;
+                    c.AVGLoss = (Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Where(a => a.GainOrLoss < 0).Take(RSIPeriod1h).Sum(a => a.GainOrLoss) / RSIPeriod1h) * -1;
+
+                    c.RS = c.AVGGain / c.AVGLoss; // Only like this on first one (seeding it)
+                    c.RSI = 100 - (100 / (1 + c.RS));
+                }
+                else if (c.PCC > RSIPeriod1h - 1)
+                {
+                    double? LastAVGGain1h = Candles1h.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().AVGGain;
+                    double? LastAVGLoss1h = Candles1h.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().AVGLoss;
+                    double? Gain1h = 0;
+                    double? Loss1h = 0;
+
+                    if (c.GainOrLoss > 0)
+                    {
+                        Gain1h = c.GainOrLoss;
+                    }
+                    else if (c.GainOrLoss < 0)
+                    {
+                        Loss1h = c.GainOrLoss * -1;
+                    }
+
+                    c.AVGGain = (((LastAVGGain1h * (RSIPeriod1h - 1)) + Gain1h) / RSIPeriod1h);
+                    c.AVGLoss = (((LastAVGLoss1h * (RSIPeriod1h - 1)) + Loss1h) / RSIPeriod1h);
+
+                    c.RS = c.AVGGain / c.AVGLoss;
+                    c.RSI = 100 - (100 / (1 + c.RS));
+                }
+                if (c.AVGGain != null) { c.AVGGain = Math.Round(Convert.ToDouble(c.AVGGain), 4); }
+                if (c.AVGLoss != null) { c.AVGLoss = Math.Round(Convert.ToDouble(c.AVGLoss), 4); }
+                if (c.RSI != null) { c.RSI = Math.Round(Convert.ToDouble(c.RSI), 4); }
+                if (c.RS != null) { c.RS = Math.Round(Convert.ToDouble(c.RS), 4); }
+                #endregion RSI
+
+                #region StochRSI
+
+                // For STOCH
+                if (c.PCC >= STOCHLookbackPeriod1h - 1)
+                {
+                    double? HighInLookback1h = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(STOCHLookbackPeriod1h).Max(a => a.High);
+                    double? LowInLookback1h = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(STOCHLookbackPeriod1h).Min(a => a.Low);
+
+                    c.STOCHK = ((c.Close - LowInLookback1h) / (HighInLookback1h - LowInLookback1h)) * 100;
+                }
+                if (c.PCC >= STOCHLookbackPeriod1h - 1 + STOCHDPeriod1h) // difference of -1 and 2 is 3, to allow for the 3 period SMA required for STOCH
+                {
+                    c.STOCHD = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(STOCHDPeriod1h).Average(a => a.STOCHK);
+                }
+
+                if (c.STOCHK != null) { c.STOCHK = Math.Round(Convert.ToDouble(c.STOCHK), 4); }
+                if (c.STOCHD != null) { c.STOCHD = Math.Round(Convert.ToDouble(c.STOCHD), 4); }
+                #endregion StochRSI
+
+            }
+
+            Candles1h = Candles1h.OrderByDescending(a => a.TimeStamp).ToList();
+
+            // Show Candles
+            dgvCandles1h.DataSource = Candles1h;
+
+            //dgvCandles1h.Columns["MA1"].Visible = false;
+            //dgvCandles1h.Columns["MA2"].Visible = false;
+            dgvCandles1h.Columns["EMA1"].Visible = false;
+            dgvCandles1h.Columns["EMA2"].Visible = false;
+            dgvCandles1h.Columns["EMA3"].Visible = false;
+            ////  dgvCandles.Columns["MACDLine"].Visible = false;
+            ////  dgvCandles.Columns["MACDSignalLine"].Visible = false;
+            dgvCandles1h.Columns["STOCHK"].Visible = false;
+            dgvCandles1h.Columns["STOCHD"].Visible = false;
+            dgvCandles1h.Columns["TR"].Visible = false;
+            dgvCandles1h.Columns["ATR1"].Visible = false;
+            dgvCandles1h.Columns["ATR2"].Visible = false;
+            dgvCandles1h.Columns["RS"].Visible = false;
+            dgvCandles1h.Columns["AVGGain"].Visible = false;
+            dgvCandles1h.Columns["AVGLoss"].Visible = false;
+            dgvCandles1h.Columns["GainOrLoss"].Visible = false;
+
+
+            #endregion ORIGINAL CANDLES
+
+
+
+            
+
+        }
+
+        private void UpdateCandles1d()
+        {
+            DayCandleFiratTime = false;
+
+            #region ORIGINAL CANDLES
+            // Get Candles
+
+            //if (CandlesFirstTime == false)
+            //{
+            Candles1d = bitmex.GetCandleHistory1d(ActiveInstrument.Symbol, 500, "1d");
+            //}
+
+
+
+
+            Candles1d = Candles1d.OrderBy(a => a.TimeStamp).ToList();
+
+
+
+            // For TD Sequential
+            int TimeFrameTDSeq = 0;
+            string UpOrDown1d = "Down";
+            int UpValue1d = 1;
+            int DownValue1d = 1;
+
+            //  Set indicator info
+            foreach (Candle1d c in Candles1d)
+            {
+                c.PCC = Candles1d.Where(a => a.TimeStamp < c.TimeStamp).Count();
+
+                #region TDSeq
+
+                if (c.PCC >= 4)
+                {
+
+                    double? FourCandlesBefore1d = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(TimeFrameTDSeq).Close;
+                    if (FourCandlesBefore1d < c.Close)
+                    {
+                        UpOrDown1d = "Up";
+                        DownValue1d = 1;
+                        c.TDSeq = UpValue1d;
+                        c.TDUoD = UpOrDown1d;
+                        UpValue1d++;
+                    }
+                    else if (FourCandlesBefore1d > c.Close)
+                    {
+                        UpOrDown1d = "Down";
+                        UpValue1d = 1;
+                        c.TDSeq = DownValue1d;
+                        c.TDUoD = UpOrDown1d;
+                        DownValue1d++;
+                    }
+                    else if (FourCandlesBefore1d == c.Close)
+                    {
+                        UpValue1d = 1;
+                        DownValue1d = 1;
+                        c.TDUoD = "Equal";
+                        c.TDSeq = 0;
+                    }
+
+                    TimeFrameTDSeq = TimeFrameTDSeq + 1;
+                }
+
+                #endregion TDSeq
+
+
+
+                int MA1Period1d = Convert.ToInt32(nudMA1.Value);
+                int MA2Period1d = Convert.ToInt32(nudMA2.Value);
+
+                if (c.PCC >= MA1Period1d)
+                {
+                    // Get the moving average over the last x periods using closing ** Includes current candle **
+                    c.MA1 = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(MA1Period1d).Average(a => a.Close);
+                    // With not enough candles, we don't set to 0, we leave it null
+                    if (c.MA1 != null) { c.MA1 = Math.Round(Convert.ToDouble(c.MA1), 4); }
+                }
+
+                if (c.PCC >= MA2Period1d)
+                {
+                    // Get the moving average over the last x periods using closing ** Includes current candle **
+                    c.MA2 = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(MA2Period1d).Average(a => a.Close);
+                    // With not enough candles, we don't set to 0, we leave it null
+                    if (c.MA2 != null) { c.MA2 = Math.Round(Convert.ToDouble(c.MA2), 4); }
+                }
+
+                if (c.PCC >= BBLength1d)
+                {
+                    // BBMiddle is just a 20 period moving average
+                    c.BBMiddle = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(BBLength1d).Average(a => a.Close);
+
+                    // Calcualting Standard Deviation
+                    double total_squared1d = 0;
+                    double total_for_average1d = Convert.ToDouble(Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(BBLength1d).Sum(a => a.Close));
+                    foreach (Candle1d cb in Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(BBLength1d).ToList())
+                    {
+                        total_squared1d += Math.Pow(Convert.ToDouble(cb.Close), 2);
+                    }
+                    double stdev1d = Math.Sqrt((total_squared1d - (Math.Pow(total_for_average1d, 2) / BBLength1d)) / BBLength1d);
+                    c.BBUpper = c.BBMiddle + (stdev1d * BBMultiplier1d);
+                    c.BBLower = c.BBMiddle - (stdev1d * BBMultiplier1d);
+
+                    if (c.BBMiddle != null) { c.BBMiddle = Math.Round(Convert.ToDouble(c.BBMiddle), 4); }
+                    if (c.BBUpper != null) { c.BBUpper = Math.Round(Convert.ToDouble(c.BBUpper), 4); }
+                    if (c.BBLower != null) { c.BBLower = Math.Round(Convert.ToDouble(c.BBLower), 4); }
+                }
+
+                if (c.PCC >= EMA1Period1d)
+                {
+                    double p11d = EMA1Period1d + 1;
+                    double EMAMultiplier1d = Convert.ToDouble(2 / p11d);
+
+                    if (c.PCC == EMA1Period1d)
+                    {
+                        // This is our seed EMA, using SMA of EMA1 period for EMA 1
+                        c.EMA1 = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(EMA1Period1d).Average(a => a.Close);
+                    }
+                    else
+                    {
+                        double? LastEMA1d = Candles1d.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().EMA1;
+                        c.EMA1 = ((c.Close - LastEMA1d) * EMAMultiplier1d) + LastEMA1d;
+                    }
+                    if (c.EMA1 != null) { c.EMA1 = Math.Round(Convert.ToDouble(c.EMA1), 4); }
+                }
+
+                if (c.PCC >= EMA2Period1d)
+                {
+                    double p11d = EMA2Period1d + 1;
+                    double EMAMultiplier1d = Convert.ToDouble(2 / p11d);
+
+                    if (c.PCC == EMA2Period1d)
+                    {
+                        // This is our seed EMA, using SMA
+                        c.EMA2 = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(EMA2Period1d).Average(a => a.Close);
+                    }
+                    else
+                    {
+                        double? LastEMA1d = Candles1d.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().EMA2;
+                        c.EMA2 = ((c.Close - LastEMA1d) * EMAMultiplier1d) + LastEMA1d;
+                    }
+                    if (c.EMA2 != null) { c.EMA2 = Math.Round(Convert.ToDouble(c.EMA2), 4); }
+                }
+
+                if (c.PCC >= EMA3Period1d)
+                {
+                    double p11d = EMA3Period1d + 1;
+                    double EMAMultiplier1d = Convert.ToDouble(2 / p11d);
+
+                    if (c.PCC == EMA3Period1d)
+                    {
+                        // This is our seed EMA, using SMA
+                        c.EMA3 = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(EMA3Period1d).Average(a => a.Close);
+                    }
+                    else
+                    {
+                        double? LastEMA1d = Candles1d.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().EMA3;
+                        c.EMA3 = ((c.Close - LastEMA1d) * EMAMultiplier1d) + LastEMA1d;
+                    }
+                    if (c.EMA3 != null) { c.EMA3 = Math.Round(Convert.ToDouble(c.EMA3), 4); }
+                }
+
+                // MACD
+                // We can only do this if we have the longest EMA period, EMA1
+                if (c.PCC >= EMA1Period1d)
+                {
+
+                    double p11d = MACDEMAPeriod1d + 1;
+                    double MACDEMAMultiplier1d = Convert.ToDouble(2 / p11d);
+
+                    c.MACDLine = (c.EMA2 - c.EMA1); // default is 12EMA - 26EMA
+                    if (c.PCC == EMA1Period1d + MACDEMAPeriod1d)
+                    {
+                        // Set this to SMA of MACDLine to seed it
+                        c.MACDSignalLine = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(MACDEMAPeriod1d).Average(a => (a.MACDLine));
+                    }
+                    else if (c.PCC > EMA1Period1d + MACDEMAPeriod1d)
+                    {
+                        // We can calculate this EMA based off past candle EMAs
+                        double? LastMACDSignalLine = Candles1d.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().MACDSignalLine;
+                        c.MACDSignalLine = ((c.MACDLine - LastMACDSignalLine) * MACDEMAMultiplier1d) + LastMACDSignalLine;
+                    }
+                    c.MACDHistorgram = c.MACDLine - c.MACDSignalLine;
+
+                    if (c.MACDSignalLine != null) { c.MACDSignalLine = Math.Round(Convert.ToDouble(c.MACDSignalLine), 4); }
+                    if (c.MACDLine != null) { c.MACDLine = Math.Round(Convert.ToDouble(c.MACDLine), 4); }
+                    if (c.MACDHistorgram != null) { c.MACDHistorgram = Math.Round(Convert.ToDouble(c.MACDHistorgram), 4); }
+
+                }
+
+                #region ATR
+                // ATR, setting TR
+                if (c.PCC == 0)
+                {
+                    c.SetTR(c.High);
+                }
+                else if (c.PCC > 0)
+                {
+                    c.SetTR(Candles1d.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().Close);
+                }
+
+                // Setting ATRs
+                if (c.PCC == ATR1Period1d - 1)
+                {
+                    c.ATR1 = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(ATR1Period1d).Average(a => a.TR);
+                }
+                else if (c.PCC > ATR1Period1d - 1)
+                {
+                    double p11d = ATR1Period1d + 1;
+                    double ATR1Multiplier1d = Convert.ToDouble(2 / p11d);
+                    double? LastATR1 = Candles1d.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().ATR1;
+                    c.ATR1 = ((c.TR - LastATR1) * ATR1Multiplier1d) + LastATR1;
+                }
+
+
+                if (c.PCC == ATR2Period1d - 1)
+                {
+                    c.ATR2 = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(ATR2Period1d).Average(a => a.TR);
+                }
+                else if (c.PCC > ATR2Period1d - 1)
+                {
+                    double p11d = ATR2Period1d + 1;
+                    double ATR2Multiplier1d = Convert.ToDouble(2 / p11d);
+                    double? LastATR2 = Candles1d.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().ATR2;
+                    c.ATR2 = ((c.TR - LastATR2) * ATR2Multiplier1d) + LastATR2;
+                }
+                if (c.TR != null) { c.TR = Math.Round(Convert.ToDouble(c.TR), 4); }
+                if (c.ATR1 != null) { c.ATR1 = Math.Round(Convert.ToDouble(c.ATR1), 4); }
+                if (c.ATR2 != null) { c.ATR2 = Math.Round(Convert.ToDouble(c.ATR2), 4); }
+                #endregion ATR
+
+                #region RSI
+                // For RSI
+                if (c.PCC == RSIPeriod1d - 1)
+                {
+                    // AVG Gain is average of just gains, for all periods, (14), not just periods with gains.  Same goes for losses but with losses.
+                    c.AVGGain = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Where(a => a.GainOrLoss > 0).Take(RSIPeriod1d).Sum(a => a.GainOrLoss) / RSIPeriod1d;
+                    c.AVGLoss = (Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Where(a => a.GainOrLoss < 0).Take(RSIPeriod1d).Sum(a => a.GainOrLoss) / RSIPeriod1d) * -1;
+
+                    c.RS = c.AVGGain / c.AVGLoss; // Only like this on first one (seeding it)
+                    c.RSI = 100 - (100 / (1 + c.RS));
+                }
+                else if (c.PCC > RSIPeriod1d - 1)
+                {
+                    double? LastAVGGain = Candles1d.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().AVGGain;
+                    double? LastAVGLoss = Candles1d.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().AVGLoss;
+                    double? Gain1d = 0;
+                    double? Loss1d = 0;
+
+                    if (c.GainOrLoss > 0)
+                    {
+                        Gain1d = c.GainOrLoss;
+                    }
+                    else if (c.GainOrLoss < 0)
+                    {
+                        Loss1d = c.GainOrLoss * -1;
+                    }
+
+                    c.AVGGain = (((LastAVGGain * (RSIPeriod1d - 1)) + Gain1d) / RSIPeriod1d);
+                    c.AVGLoss = (((LastAVGLoss * (RSIPeriod1d - 1)) + Loss1d) / RSIPeriod1d);
+
+                    c.RS = c.AVGGain / c.AVGLoss;
+                    c.RSI = 100 - (100 / (1 + c.RS));
+                }
+                if (c.AVGGain != null) { c.AVGGain = Math.Round(Convert.ToDouble(c.AVGGain), 4); }
+                if (c.AVGLoss != null) { c.AVGLoss = Math.Round(Convert.ToDouble(c.AVGLoss), 4); }
+                if (c.RSI != null) { c.RSI = Math.Round(Convert.ToDouble(c.RSI), 4); }
+                if (c.RS != null) { c.RS = Math.Round(Convert.ToDouble(c.RS), 4); }
+                #endregion RSI
+
+                #region StochRSI
+
+                // For STOCH
+                if (c.PCC >= STOCHLookbackPeriod1d - 1)
+                {
+                    double? HighInLookback1d = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(STOCHLookbackPeriod1d).Max(a => a.High);
+                    double? LowInLookback1d = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(STOCHLookbackPeriod1d).Min(a => a.Low);
+
+                    c.STOCHK = ((c.Close - LowInLookback1d) / (HighInLookback1d - LowInLookback1d)) * 100;
+                }
+                if (c.PCC >= STOCHLookbackPeriod1d - 1 + STOCHDPeriod1d) // difference of -1 and 2 is 3, to allow for the 3 period SMA required for STOCH
+                {
+                    c.STOCHD = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(STOCHDPeriod1d).Average(a => a.STOCHK);
+                }
+
+                if (c.STOCHK != null) { c.STOCHK = Math.Round(Convert.ToDouble(c.STOCHK), 4); }
+                if (c.STOCHD != null) { c.STOCHD = Math.Round(Convert.ToDouble(c.STOCHD), 4); }
+                #endregion StochRSI
+
+            }
+
+            Candles1d = Candles1d.OrderByDescending(a => a.TimeStamp).ToList();
+
+            // Show Candles
+            dgvCandles1d.DataSource = Candles1d;
+
+            //dgvCandles1d.Columns["MA1"].Visible = false;
+            //dgvCandles1d.Columns["MA2"].Visible = false;
+            dgvCandles1d.Columns["EMA1"].Visible = false;
+            dgvCandles1d.Columns["EMA2"].Visible = false;
+            dgvCandles1d.Columns["EMA3"].Visible = false;
+            ////  dgvCandles.Columns["MACDLine"].Visible = false;
+            ////  dgvCandles.Columns["MACDSignalLine"].Visible = false;
+            dgvCandles1d.Columns["STOCHK"].Visible = false;
+            dgvCandles1d.Columns["STOCHD"].Visible = false;
+            dgvCandles1d.Columns["TR"].Visible = false;
+            dgvCandles1d.Columns["ATR1"].Visible = false;
+            dgvCandles1d.Columns["ATR2"].Visible = false;
+            dgvCandles1d.Columns["RS"].Visible = false;
+            dgvCandles1d.Columns["AVGGain"].Visible = false;
+            dgvCandles1d.Columns["AVGLoss"].Visible = false;
+            dgvCandles1d.Columns["GainOrLoss"].Visible = false;
+
+
+            #endregion ORIGINAL CANDLES
+
+            
+
+            
+
+        }
+
+        private void tmrCandleUpdaterhd_Tick(object sender, EventArgs e)
+        {
+            if (chkUpdateCandles.Checked)
+            {
+                UpdateCandles1h();
+                UpdateCandles1d();
+            }
+        }
+
+        private void ddlStrategyType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+            if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0)
+            {
+                TrailingProfitStartPrice = 1000000;
+                TrailingProfitExecutePrice = 999999;
+            }
+
+            if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0)
+            {
+                TrailingProfitStartPrice = 1;
+                TrailingProfitExecutePrice = 2;
+            }
+            txtTPStart.Text = TrailingProfitStartPrice.ToString();
+            txtTPExecute.Text = TrailingProfitExecutePrice.ToString();
+
+            if (ddlStrategyType.SelectedIndex == 1)
+            {
+                TPTimerLimit = 150;
+                txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
+            }
+
+
+            if (ddlStrategyType.SelectedIndex == 0 && (SymbolOrder.OrdStatus == "New" || SymbolOrder.OrdStatus == "PartiallyFilled") && NotStopLoss == true)
+            {
+                bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+            }
+            if(ddlStrategyType.SelectedIndex == 1 && (SymbolOrder.OrdStatus == "New" || SymbolOrder.OrdStatus == "PartiallyFilled") && NotStopLoss == true)
+            {
+                bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+            }
+        }
+
+        private void nudStartTrailingProfit_ValueChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void chkManualControl_CheckedChanged(object sender, EventArgs e)
+        {
+            bool OpenOrdercheckmc = false;
+
+            if (SymbolOrder.OrdStatus == "New" || SymbolOrder.OrdStatus == "PartiallyFilled")
+            {
+                OpenOrdercheckmc = true;
+            }
+            else
+            {
+                OpenOrdercheckmc = false;
+            }
+
+            if (SymbolPosition.IsOpen == false && OpenOrdercheckmc == true)
+            {
+                bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+            }
         }
     }
 }

@@ -48,15 +48,16 @@
             this.txtWebSocketFails = new System.Windows.Forms.TextBox();
             this.txtSettingsWebsocketInfo = new System.Windows.Forms.TextBox();
             this.lblRetry = new System.Windows.Forms.Label();
+            this.chkUpdateCandles = new System.Windows.Forms.CheckBox();
+            this.dgvCandles = new System.Windows.Forms.DataGridView();
+            this.ddlCandleTimes = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.nudMA2 = new System.Windows.Forms.NumericUpDown();
             this.nudMA1 = new System.Windows.Forms.NumericUpDown();
-            this.chkUpdateCandles = new System.Windows.Forms.CheckBox();
-            this.dgvCandles = new System.Windows.Forms.DataGridView();
-            this.ddlCandleTimes = new System.Windows.Forms.ComboBox();
             this.tmrCandleUpdater = new System.Windows.Forms.Timer(this.components);
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.chkManualControl = new System.Windows.Forms.CheckBox();
             this.label33 = new System.Windows.Forms.Label();
             this.ddlStrategyType = new System.Windows.Forms.ComboBox();
             this.groupBox8 = new System.Windows.Forms.GroupBox();
@@ -145,14 +146,23 @@
             this.txtOrderSize = new System.Windows.Forms.TextBox();
             this.txtOrderPrice = new System.Windows.Forms.TextBox();
             this.tmrCandleUpdaterhd = new System.Windows.Forms.Timer(this.components);
-            this.chkManualControl = new System.Windows.Forms.CheckBox();
+            this.groupBox9 = new System.Windows.Forms.GroupBox();
+            this.label38 = new System.Windows.Forms.Label();
+            this.label37 = new System.Windows.Forms.Label();
+            this.nudATRMultiplier = new System.Windows.Forms.NumericUpDown();
+            this.nudATRPeriod = new System.Windows.Forms.NumericUpDown();
+            this.groupBox10 = new System.Windows.Forms.GroupBox();
+            this.nupRSIDifferenceThree = new System.Windows.Forms.NumericUpDown();
+            this.label39 = new System.Windows.Forms.Label();
+            this.nudPriceChange = new System.Windows.Forms.NumericUpDown();
+            this.label40 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nupQty)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles1d)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles1h)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvCandles)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvCandles)).BeginInit();
             this.groupBox2.SuspendLayout();
             this.groupBox8.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudExecuteTrailingProfit)).BeginInit();
@@ -170,6 +180,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudOverloadRetryAttempts)).BeginInit();
             this.groupBox4.SuspendLayout();
             this.groupBox5.SuspendLayout();
+            this.groupBox9.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudATRMultiplier)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudATRPeriod)).BeginInit();
+            this.groupBox10.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifferenceThree)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPriceChange)).BeginInit();
             this.SuspendLayout();
             // 
             // btnBuy
@@ -316,10 +332,6 @@
             this.groupBox1.Controls.Add(this.txtWebSocketFails);
             this.groupBox1.Controls.Add(this.txtSettingsWebsocketInfo);
             this.groupBox1.Controls.Add(this.lblRetry);
-            this.groupBox1.Controls.Add(this.label5);
-            this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Controls.Add(this.nudMA2);
-            this.groupBox1.Controls.Add(this.nudMA1);
             this.groupBox1.Controls.Add(this.chkUpdateCandles);
             this.groupBox1.Controls.Add(this.dgvCandles);
             this.groupBox1.Controls.Add(this.ddlCandleTimes);
@@ -387,58 +399,6 @@
             this.lblRetry.TabIndex = 11;
             this.lblRetry.Text = "Retry: ";
             // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(342, 23);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(32, 13);
-            this.label5.TabIndex = 10;
-            this.label5.Text = "MA 2";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(242, 23);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(32, 13);
-            this.label4.TabIndex = 9;
-            this.label4.Text = "MA 1";
-            // 
-            // nudMA2
-            // 
-            this.nudMA2.Location = new System.Drawing.Point(292, 21);
-            this.nudMA2.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.nudMA2.Name = "nudMA2";
-            this.nudMA2.Size = new System.Drawing.Size(44, 20);
-            this.nudMA2.TabIndex = 6;
-            this.nudMA2.Value = new decimal(new int[] {
-            5,
-            0,
-            0,
-            0});
-            // 
-            // nudMA1
-            // 
-            this.nudMA1.Location = new System.Drawing.Point(192, 21);
-            this.nudMA1.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.nudMA1.Name = "nudMA1";
-            this.nudMA1.Size = new System.Drawing.Size(44, 20);
-            this.nudMA1.TabIndex = 5;
-            this.nudMA1.Value = new decimal(new int[] {
-            3,
-            0,
-            0,
-            0});
-            // 
             // chkUpdateCandles
             // 
             this.chkUpdateCandles.AutoSize = true;
@@ -479,6 +439,58 @@
             this.ddlCandleTimes.TabIndex = 0;
             this.ddlCandleTimes.SelectedIndexChanged += new System.EventHandler(this.ddlCandleTimes_SelectedIndexChanged);
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(56, 47);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(32, 13);
+            this.label5.TabIndex = 10;
+            this.label5.Text = "MA 2";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(57, 21);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(32, 13);
+            this.label4.TabIndex = 9;
+            this.label4.Text = "MA 1";
+            // 
+            // nudMA2
+            // 
+            this.nudMA2.Location = new System.Drawing.Point(6, 45);
+            this.nudMA2.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudMA2.Name = "nudMA2";
+            this.nudMA2.Size = new System.Drawing.Size(44, 20);
+            this.nudMA2.TabIndex = 6;
+            this.nudMA2.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
+            // nudMA1
+            // 
+            this.nudMA1.Location = new System.Drawing.Point(7, 19);
+            this.nudMA1.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudMA1.Name = "nudMA1";
+            this.nudMA1.Size = new System.Drawing.Size(44, 20);
+            this.nudMA1.TabIndex = 5;
+            this.nudMA1.Value = new decimal(new int[] {
+            3,
+            0,
+            0,
+            0});
+            // 
             // tmrCandleUpdater
             // 
             this.tmrCandleUpdater.Interval = 3000;
@@ -509,6 +521,17 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Automated Trading - 2 sec update";
             // 
+            // chkManualControl
+            // 
+            this.chkManualControl.AutoSize = true;
+            this.chkManualControl.Location = new System.Drawing.Point(456, 178);
+            this.chkManualControl.Name = "chkManualControl";
+            this.chkManualControl.Size = new System.Drawing.Size(75, 17);
+            this.chkManualControl.TabIndex = 32;
+            this.chkManualControl.Text = "Man, Con,";
+            this.chkManualControl.UseVisualStyleBackColor = true;
+            this.chkManualControl.CheckedChanged += new System.EventHandler(this.chkManualControl_CheckedChanged);
+            // 
             // label33
             // 
             this.label33.AutoSize = true;
@@ -524,7 +547,8 @@
             this.ddlStrategyType.FormattingEnabled = true;
             this.ddlStrategyType.Items.AddRange(new object[] {
             "Strat1",
-            "Strat2"});
+            "Strat2",
+            "Strat3"});
             this.ddlStrategyType.Location = new System.Drawing.Point(457, 151);
             this.ddlStrategyType.Name = "ddlStrategyType";
             this.ddlStrategyType.Size = new System.Drawing.Size(65, 21);
@@ -1492,22 +1516,181 @@
             this.tmrCandleUpdaterhd.Interval = 300000;
             this.tmrCandleUpdaterhd.Tick += new System.EventHandler(this.tmrCandleUpdaterhd_Tick);
             // 
-            // chkManualControl
+            // groupBox9
             // 
-            this.chkManualControl.AutoSize = true;
-            this.chkManualControl.Location = new System.Drawing.Point(456, 178);
-            this.chkManualControl.Name = "chkManualControl";
-            this.chkManualControl.Size = new System.Drawing.Size(75, 17);
-            this.chkManualControl.TabIndex = 32;
-            this.chkManualControl.Text = "Man, Con,";
-            this.chkManualControl.UseVisualStyleBackColor = true;
-            this.chkManualControl.CheckedChanged += new System.EventHandler(this.chkManualControl_CheckedChanged);
+            this.groupBox9.Controls.Add(this.label38);
+            this.groupBox9.Controls.Add(this.label37);
+            this.groupBox9.Controls.Add(this.nudATRMultiplier);
+            this.groupBox9.Controls.Add(this.nudATRPeriod);
+            this.groupBox9.Controls.Add(this.nudMA1);
+            this.groupBox9.Controls.Add(this.label4);
+            this.groupBox9.Controls.Add(this.nudMA2);
+            this.groupBox9.Controls.Add(this.label5);
+            this.groupBox9.Location = new System.Drawing.Point(12, 191);
+            this.groupBox9.Name = "groupBox9";
+            this.groupBox9.Size = new System.Drawing.Size(204, 111);
+            this.groupBox9.TabIndex = 23;
+            this.groupBox9.TabStop = false;
+            this.groupBox9.Text = "Indicator settings";
+            // 
+            // label38
+            // 
+            this.label38.AutoSize = true;
+            this.label38.Location = new System.Drawing.Point(149, 47);
+            this.label38.Name = "label38";
+            this.label38.Size = new System.Drawing.Size(41, 13);
+            this.label38.TabIndex = 14;
+            this.label38.Text = "ATR M";
+            // 
+            // label37
+            // 
+            this.label37.AutoSize = true;
+            this.label37.Location = new System.Drawing.Point(149, 21);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size(29, 13);
+            this.label37.TabIndex = 13;
+            this.label37.Text = "ATR";
+            // 
+            // nudATRMultiplier
+            // 
+            this.nudATRMultiplier.DecimalPlaces = 1;
+            this.nudATRMultiplier.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.nudATRMultiplier.Location = new System.Drawing.Point(99, 45);
+            this.nudATRMultiplier.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.nudATRMultiplier.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.nudATRMultiplier.Name = "nudATRMultiplier";
+            this.nudATRMultiplier.Size = new System.Drawing.Size(44, 20);
+            this.nudATRMultiplier.TabIndex = 12;
+            this.nudATRMultiplier.Value = new decimal(new int[] {
+            35,
+            0,
+            0,
+            65536});
+            this.nudATRMultiplier.ValueChanged += new System.EventHandler(this.nudATRMultiplier_ValueChanged);
+            // 
+            // nudATRPeriod
+            // 
+            this.nudATRPeriod.Location = new System.Drawing.Point(99, 19);
+            this.nudATRPeriod.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.nudATRPeriod.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.nudATRPeriod.Name = "nudATRPeriod";
+            this.nudATRPeriod.Size = new System.Drawing.Size(44, 20);
+            this.nudATRPeriod.TabIndex = 11;
+            this.nudATRPeriod.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.nudATRPeriod.ValueChanged += new System.EventHandler(this.nudATRPeriod_ValueChanged);
+            // 
+            // groupBox10
+            // 
+            this.groupBox10.Controls.Add(this.label40);
+            this.groupBox10.Controls.Add(this.nudPriceChange);
+            this.groupBox10.Controls.Add(this.label39);
+            this.groupBox10.Controls.Add(this.nupRSIDifferenceThree);
+            this.groupBox10.Location = new System.Drawing.Point(220, 191);
+            this.groupBox10.Name = "groupBox10";
+            this.groupBox10.Size = new System.Drawing.Size(143, 111);
+            this.groupBox10.TabIndex = 24;
+            this.groupBox10.TabStop = false;
+            this.groupBox10.Text = "Strategy 3";
+            // 
+            // nupRSIDifferenceThree
+            // 
+            this.nupRSIDifferenceThree.Location = new System.Drawing.Point(6, 45);
+            this.nupRSIDifferenceThree.Maximum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.nupRSIDifferenceThree.Minimum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            -2147483648});
+            this.nupRSIDifferenceThree.Name = "nupRSIDifferenceThree";
+            this.nupRSIDifferenceThree.Size = new System.Drawing.Size(60, 20);
+            this.nupRSIDifferenceThree.TabIndex = 27;
+            this.nupRSIDifferenceThree.Value = new decimal(new int[] {
+            7,
+            0,
+            0,
+            -2147483648});
+            // 
+            // label39
+            // 
+            this.label39.AutoSize = true;
+            this.label39.Location = new System.Drawing.Point(72, 47);
+            this.label39.Name = "label39";
+            this.label39.Size = new System.Drawing.Size(69, 13);
+            this.label39.TabIndex = 28;
+            this.label39.Text = "RSI diff to 50";
+            // 
+            // nudPriceChange
+            // 
+            this.nudPriceChange.DecimalPlaces = 1;
+            this.nudPriceChange.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudPriceChange.Location = new System.Drawing.Point(6, 19);
+            this.nudPriceChange.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.nudPriceChange.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudPriceChange.Name = "nudPriceChange";
+            this.nudPriceChange.Size = new System.Drawing.Size(60, 20);
+            this.nudPriceChange.TabIndex = 29;
+            this.nudPriceChange.Value = new decimal(new int[] {
+            45,
+            0,
+            0,
+            0});
+            // 
+            // label40
+            // 
+            this.label40.AutoSize = true;
+            this.label40.Location = new System.Drawing.Point(72, 21);
+            this.label40.Name = "label40";
+            this.label40.Size = new System.Drawing.Size(70, 13);
+            this.label40.TabIndex = 30;
+            this.label40.Text = "Price change";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1287, 551);
+            this.Controls.Add(this.groupBox10);
+            this.Controls.Add(this.groupBox9);
             this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.lblOverloadRetryAttempts);
@@ -1538,9 +1721,9 @@
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles1d)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles1h)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvCandles)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudMA1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvCandles)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.groupBox8.ResumeLayout(false);
@@ -1565,6 +1748,14 @@
             this.groupBox4.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
+            this.groupBox9.ResumeLayout(false);
+            this.groupBox9.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudATRMultiplier)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudATRPeriod)).EndInit();
+            this.groupBox10.ResumeLayout(false);
+            this.groupBox10.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifferenceThree)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudPriceChange)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1688,6 +1879,16 @@
         private System.Windows.Forms.TextBox txtTPStart;
         private System.Windows.Forms.TextBox txtTPTimer;
         private System.Windows.Forms.CheckBox chkManualControl;
+        private System.Windows.Forms.GroupBox groupBox9;
+        private System.Windows.Forms.Label label38;
+        private System.Windows.Forms.Label label37;
+        private System.Windows.Forms.NumericUpDown nudATRMultiplier;
+        private System.Windows.Forms.NumericUpDown nudATRPeriod;
+        private System.Windows.Forms.GroupBox groupBox10;
+        private System.Windows.Forms.Label label40;
+        private System.Windows.Forms.NumericUpDown nudPriceChange;
+        private System.Windows.Forms.Label label39;
+        private System.Windows.Forms.NumericUpDown nupRSIDifferenceThree;
     }
 }
 

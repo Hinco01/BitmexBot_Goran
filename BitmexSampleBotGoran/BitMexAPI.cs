@@ -1082,6 +1082,9 @@ namespace BitMEX
         public int PCC { get; set; }  // Previous Candle Count     
         public string TDUoD { get; set; }
         public int TDSeq { get; set; }
+        public string ATRTS { get; set; }
+        public double? ATRTrailingStop { get; set; }
+        public int? ATRTrailingStopPOS { get; set; }
         public double? MACDHistorgram { get; set; }
         public double? RSI { get; set; } // For RSI
         public double? MA1 { get; set; }
@@ -1197,6 +1200,9 @@ namespace BitMEX
         public int PCC { get; set; }  // Previous Candle Count     
         public string TDUoD { get; set; }
         public int TDSeq { get; set; }
+        public string ATRTS { get; set; }
+        public double? ATRTrailingStop { get; set; }
+        public int? ATRTrailingStopPOS { get; set; }
         public double? MACDHistorgram { get; set; }
         public double? RSI { get; set; } // For RSI
         public double? MA1 { get; set; }
@@ -1248,6 +1254,9 @@ namespace BitMEX
         public int PCC { get; set; }  // Previous Candle Count     
         public string TDUoD { get; set; }
         public int TDSeq { get; set; }
+        public string ATRTS { get; set; }
+        public double? ATRTrailingStop { get; set; }
+        public int? ATRTrailingStopPOS { get; set; }
         public double? MACDHistorgram { get; set; }
         public double? RSI { get; set; } // For RSI
         public double? MA1 { get; set; }

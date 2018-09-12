@@ -91,8 +91,11 @@ namespace BitmexSampleBotGoran
         int MACDEMAPeriod = 9;  // MACD smoothing period
 
         // For ATR
-        int ATR1Period = 7;
+        int ATR1Period = 5;
         int ATR2Period = 20;
+
+        //ATR Trailing Stop
+        double ATRMultip = 3.5;
 
         // For RSI
         int RSIPeriod = 14;
@@ -1272,8 +1275,11 @@ namespace BitmexSampleBotGoran
 
                 }
 
-                    #region ATR
-                    // ATR, setting TR
+
+                #region ATR
+
+                    ATR1Period = Convert.ToInt32(nudATRPeriod.Value);
+                // ATR, setting TR
                     if (c.PCC == 0)
                     {
                         c.SetTR(c.High);
@@ -1283,7 +1289,8 @@ namespace BitmexSampleBotGoran
                         c.SetTR(Candles.Where(a => a.TimeStamp < c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(1).FirstOrDefault().Close);
                     }
 
-                    // Setting ATRs
+                // Setting ATRs
+                    
                     if (c.PCC == ATR1Period - 1)
                     {
                         c.ATR1 = Candles.Where(a => a.TimeStamp <= c.TimeStamp).OrderByDescending(a => a.TimeStamp).Take(ATR1Period).Average(a => a.TR);
@@ -1312,6 +1319,113 @@ namespace BitmexSampleBotGoran
                     if (c.ATR1 != null) { c.ATR1 = Math.Round(Convert.ToDouble(c.ATR1), 4); }
                     if (c.ATR2 != null) { c.ATR2 = Math.Round(Convert.ToDouble(c.ATR2), 4); }
                 #endregion ATR
+
+                #region ATR Trailing Stop
+
+
+                ATRMultip = Convert.ToDouble(nudATRMultiplier.Value);
+
+                if (c.PCC == ATR1Period - 1)
+                {
+                    double NLoss = Convert.ToDouble(c.ATR1) * ATRMultip;
+
+                    if (c.Close > 0 && Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC-1).Close > 0 )
+                    {
+                        c.ATRTrailingStop = Math.Max(0, Convert.ToDouble(c.Close) - NLoss);
+                    }
+                    else if(c.Close < 0 && Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < 0)
+                    {
+                        c.ATRTrailingStop = Math.Min(0, Convert.ToDouble(c.Close) + NLoss);
+                    }
+                    else if(c.Close > 0)
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) - NLoss;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) + NLoss;
+                    }
+
+                    if (Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < 0 && c.Close > 0)
+                    {
+                        c.ATRTrailingStopPOS = 1;
+                    }
+                    else if (Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > 0 && c.Close < 0)
+                    {
+                        c.ATRTrailingStopPOS = -1;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStopPOS = 0;
+                    }
+
+                    if (c.ATRTrailingStopPOS == -1)
+                    {
+                        c.ATRTS = "Down";
+                    }
+                    else if (c.ATRTrailingStopPOS == 1)
+                    {
+                        c.ATRTS = "Up";
+                    }
+                    else
+                    {
+                        c.ATRTS = "Blue";
+                    }
+
+                }
+                else if (c.PCC > ATR1Period - 1)
+                {
+                    double NLoss = Convert.ToDouble(c.ATR1) * ATRMultip;
+
+                    if (c.Close > Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStop = Math.Max(Convert.ToDouble(Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop), Convert.ToDouble(c.Close) - NLoss);
+                    }
+                    else if(c.Close < Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStop = Math.Min(Convert.ToDouble(Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop), Convert.ToDouble(c.Close) + NLoss);
+                    }
+                    else if (c.Close > Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) - NLoss;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) + NLoss;
+                    }
+
+
+
+                    if (Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && c.Close > Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStopPOS = 1;
+                    }
+                    else if (Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && c.Close < Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStopPOS = -1;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStopPOS = Candles.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStopPOS;
+                    }
+
+
+
+                    if (c.ATRTrailingStopPOS == -1)
+                    {
+                        c.ATRTS = "Down";
+                    }
+                    else if (c.ATRTrailingStopPOS == 1)
+                    {
+                        c.ATRTS = "Up";
+                    }
+                    else
+                    {
+                        c.ATRTS = "Blue";
+                    }
+
+                }
+                    #endregion ATR Trailing Stop
 
                     #region RSI
                     // For RSI
@@ -1383,8 +1497,10 @@ namespace BitmexSampleBotGoran
             dgvCandles.Columns["EMA1"].Visible = false;
             dgvCandles.Columns["EMA2"].Visible = false;
             dgvCandles.Columns["EMA3"].Visible = false;
-           // dgvCandles.Columns["MACDLine"].Visible = false;
-          //  dgvCandles.Columns["MACDSignalLine"].Visible = false;
+            dgvCandles.Columns["ATRTrailingStop"].Visible = false;
+            dgvCandles.Columns["ATRTrailingStopPOS"].Visible = false;
+            // dgvCandles.Columns["MACDLine"].Visible = false;
+            //  dgvCandles.Columns["MACDSignalLine"].Visible = false;
             dgvCandles.Columns["STOCHK"].Visible = false;
             dgvCandles.Columns["STOCHD"].Visible = false;
             dgvCandles.Columns["TR"].Visible = false;
@@ -1886,6 +2002,134 @@ namespace BitmexSampleBotGoran
                     }
 
                     break;
+
+                case "Strat3":
+
+                    if (rdoBuy.Checked)
+                    {
+
+
+                        //if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 1))
+                        //{
+                        //    Mode = "Wait";
+                        //    Dblcheck = 0;
+                        //    DblcheckSell = 0;
+                        //}
+                        //else if ((Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 2) && (Candles[2].TDUoD == "Down") && (Candles[2].TDSeq == 1))
+                        //{
+                        //    Mode = "Wait";
+                        //    Dblcheck = 0;
+                        //    DblcheckSell = 0;
+                        //}
+                        if ((Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 2) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifferenceThree.Value))))
+                        {
+                           // Did the last full candle have MACDLine cross above MACDSignalLine?  We'll need to buy now.
+                           // Dblcheck++;
+                           // DblcheckSell = 0;
+                           // if (ddlCandleTimes.SelectedItem.ToString() == "1m" && Dblcheck >= 16)
+                           // {
+                           //     Mode = "Buy";
+                           // }
+                           // else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && Dblcheck >= 80)
+                           // {
+                           //     Mode = "Buy";
+                           // }
+                           // else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && Dblcheck >= 960)
+                           // {
+                           //     Mode = "Buy";
+                           // }
+                           // else
+                           // {
+                           //     Mode = "Wait";
+                           // }
+
+                            Mode = "Buy";
+                            Dblcheck = 0;
+                            DblcheckSell = 0;
+
+                        }
+                        //else if ((Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1) && (Candles[0].TDUoD == "Up") && (Candles[0].TDSeq == 2) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifference.Value))))
+                        //{
+                        //    Mode = "Buy";
+                        //    Dblcheck = 0;
+                        //    DblcheckSell = 0;
+                        //}
+
+                        else
+                        {
+                            Mode = "Wait";
+                            Dblcheck = 0;
+                            DblcheckSell = 0;
+                        }
+
+                    }
+                    else if (rdoSell.Checked)
+                    {
+
+                        //if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 1) && (Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 1))
+                        //{
+                        //    Mode = "Wait";
+                        //    Dblcheck = 0;
+                        //    DblcheckSell = 0;
+                        //}
+                        //else if ((Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 2) && (Candles[2].TDUoD == "Up") && (Candles[2].TDSeq == 1))
+                        //{
+                        //    Mode = "Wait";
+                        //    Dblcheck = 0;
+                        //    DblcheckSell = 0;
+                        //}
+                        if ((Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 2) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
+                        {
+                            // Did the last full candle have MA1 cross below MA2?  We'll need to sell now
+                            //DblcheckSell++;
+                            //Dblcheck = 0;
+
+                            //if (ddlCandleTimes.SelectedItem.ToString() == "1m" && DblcheckSell >= 16)
+                            //{
+                            //    Mode = "Sell";
+                            //}
+                            //else if (ddlCandleTimes.SelectedItem.ToString() == "5m" && DblcheckSell >= 80)
+                            //{
+                            //    Mode = "Sell";
+                            //}
+                            //else if (ddlCandleTimes.SelectedItem.ToString() == "1h" && DblcheckSell >= 960)
+                            //{
+                            //    Mode = "Sell";
+                            //}
+                            //else
+                            //{
+                            //    Mode = "Wait";
+                            //}
+
+                            Mode = "Sell";
+                            DblcheckSell = 0;
+                            Dblcheck = 0;
+                        }
+                        //else if ((Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 1) && (Candles[0].TDUoD == "Down") && (Candles[0].TDSeq == 2) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
+                        //{
+                        //    Mode = "Sell";
+                        //    DblcheckSell = 0;
+                        //    Dblcheck = 0;
+                        //}
+                        else
+                        {
+                            Mode = "Wait";
+                            DblcheckSell = 0;
+                            Dblcheck = 0;
+                        }
+                    }
+
+                    //decimal HourDifferencet = Convert.ToDecimal(((Candles1h[0].High - Candles1h[0].Low) / Candles1h[0].High) * 100);
+                    //decimal HourDifferencePrevioust = Convert.ToDecimal(((Candles1h[1].High - Candles1h[1].Low) / Candles1h[1].High) * 100);
+                    //if (HourDifferencet >= Convert.ToDecimal(2.5) || HourDifferencePrevioust >= Convert.ToDecimal(2.5))
+                    //{
+                    //    Mode = "Wait";
+                    //    DblcheckSell = 0;
+                    //    Dblcheck = 0;
+                    //}
+
+
+                    break;
             }
 
 
@@ -2015,6 +2259,37 @@ namespace BitmexSampleBotGoran
 
 
                         break;
+
+                case "Strat3":
+
+
+                    if ((Candles[0].MACDHistorgram > 0 && Candles[1].MACDHistorgram > 0 && Candles[2].MACDHistorgram > 0 && Candles[3].MACDHistorgram > 0 && Candles[4].MACDHistorgram > 0))
+                    {
+                        rdoSell.Checked = true;
+                        rdoBuy.Checked = false;
+                    }
+                    else if ((Candles[0].MACDHistorgram < 0 && Candles[1].MACDHistorgram < 0 && Candles[2].MACDHistorgram < 0 && Candles[3].MACDHistorgram < 0 && Candles[4].MACDHistorgram < 0))
+                    {
+                        rdoSell.Checked = false;
+                        rdoBuy.Checked = true;
+                    }
+                    else
+                    {
+                        rdoSell.Checked = false;
+                        rdoBuy.Checked = false;
+                    }
+
+                    //if (HourCandleFiratTime == false)
+                    //{
+                    //    decimal HourDifferencet = (Convert.ToDecimal(Candles1h[0].High) - Convert.ToDecimal(Candles1h[0].Low)) / Convert.ToDecimal(Candles1h[0].High) * Convert.ToDecimal(100);
+                    //    decimal HourDifferencePrevioust = Convert.ToDecimal(((Candles1h[1].High - Candles1h[1].Low) / Candles1h[1].High) * 100);
+                    //    if (HourDifferencet >= Convert.ToDecimal(2.5) || HourDifferencePrevioust >= Convert.ToDecimal(2.5))
+                    //    {
+                    //        rdoSell.Checked = false;
+                    //        rdoBuy.Checked = false;
+                    //    }
+                    //}
+                    break;
             }
         }
 
@@ -2649,15 +2924,17 @@ namespace BitmexSampleBotGoran
                     else if (SymbolPosition.IsOpen == false && OpenOrdercheck == false && chkManualControl.Checked == false)
                     {
                         TPTimerLimit++;
-                        txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
-
-                        if (TPTimerLimit >= 150)
+                        if (TPTimerLimit > 150)
                         {
-                            TPTimerLimit = 0;
-                            txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
+                            TPTimerLimit = 150;
+                        }
+                        txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();                        
 
-                            if (rdoBuy.Checked && Mode == "Buy")
+                            if (rdoBuy.Checked && Mode == "Buy" && TPTimerLimit >= 150)
                             {
+                                TPTimerLimit = 0;
+                                txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
+
                                 if (OrderChange == true)
                                 {
                                     OrderChange = false;
@@ -2667,8 +2944,10 @@ namespace BitmexSampleBotGoran
                                     AutoMakeOrder("Buy", Convert.ToInt32(nudAutoQuantity.Value));
                                 }
                             }
-                            else if (rdoSell.Checked && Mode == "Sell")
+                            else if (rdoSell.Checked && Mode == "Sell" && TPTimerLimit >= 150)
                             {
+                                TPTimerLimit = 0;
+                                txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
                                 if (OrderChange == true)
                                 {
                                     OrderChange = false;
@@ -2678,7 +2957,7 @@ namespace BitmexSampleBotGoran
                                     AutoMakeOrder("Sell", Convert.ToInt32(nudAutoQuantity.Value));
                                 }
                             }
-                        }
+                        
 
 
 
@@ -2764,6 +3043,239 @@ namespace BitmexSampleBotGoran
                         }
                     }
                         break;
+
+                case "Strat3":
+
+                    TPTimerLimit = 150;
+                    txtTPTimer.Text = "TPTimer: " + TPTimerLimit.ToString();
+
+                    if (TrailigProfitOrderOpen == true)
+                    {
+                        bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                    }
+
+
+                    //if (OpenPositions.Any() && !OpenOrders.Any())
+                    if (SymbolPosition.IsOpen == true && OpenOrdercheck == false)
+                    {
+                        bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                        //if (OpenPositions[0].CurrentQty > 0)
+                        if (SymbolPosition.CurrentQty > 0)
+                        {
+                            // NEW TEST LIMIT CLOSE OPEN POSITON
+                            //decimal UserPercent = 1 + ((Convert.ToDecimal(nudPercentEarn.Value) / 5) / 100);
+                            decimal PriceLCOP = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) + Convert.ToDecimal(nudPriceChange.Value)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                            if (PriceLCOP < CalculateMarketOrderPrice("Sell"))
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, CalculateMarketOrderPrice("Sell"));
+                                }
+                            }
+                            else
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, PriceLCOP);
+                                }
+                            }
+                        }
+                        //else if (OpenPositions[0].CurrentQty < 0)
+                        else if (SymbolPosition.CurrentQty < 0)
+                        {
+                            // NEW TEST LIMIT CLOSE OPEN POSITON
+                            //decimal UserPercent = ((Convert.ToDecimal(nudPercentEarn.Value) / 5) / 100);
+                            //decimal UserPercentageAmount = Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * UserPercent;
+                            decimal PriceLCOP = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - Convert.ToDecimal(nudPriceChange.Value)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                            if (PriceLCOP > CalculateMarketOrderPrice("Buy"))
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, CalculateMarketOrderPrice("Buy"));
+                                }
+                            }
+                            else
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.LimitCloseOpenPosition(ActiveInstrument.Symbol, PriceLCOP);
+                                }
+                            }
+                        }
+                    }
+                    //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Sell"))
+                    else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Sell" && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
+                    {
+                        goto SkipToEndt;
+                    }
+                    //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Buy"))
+                    else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
+                    {
+                        goto SkipToEndt;
+                    }
+                    //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty > 0 && OpenOrders.Any(a => a.Side == "Buy"))
+                    else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty > 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
+                    {
+                        if (rdoBuy.Checked)
+                        {
+                            goto SkipToEndt;
+                        }
+                        else if (rdoSell.Checked)
+                        {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            }
+                        }
+                    }
+                    //else if (OpenPositions.Any() && OpenOrders.Any() && OpenPositions[0].CurrentQty < 0 && OpenOrders.Any(a => a.Side == "Sell"))
+                    else if (SymbolPosition.IsOpen == true && OpenOrdercheck == true && SymbolPosition.CurrentQty < 0 && SymbolOrder.Side == "Buy" && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
+                    {
+                        if (rdoBuy.Checked)
+                        {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            }
+                        }
+                        else if (rdoSell.Checked)
+                        {
+                            goto SkipToEndt;
+                        }
+                    }
+                    //else if (!OpenPositions.Any() && !OpenOrders.Any())
+                    else if (SymbolPosition.IsOpen == false && OpenOrdercheck == false && chkManualControl.Checked == false)
+                    {
+                        if (rdoBuy.Checked && Mode == "Buy")
+                        {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                AutoMakeOrder("Buy", Convert.ToInt32(nudAutoQuantity.Value));
+                            }
+                        }
+                        else if (rdoSell.Checked && Mode == "Sell")
+                        {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                AutoMakeOrder("Sell", Convert.ToInt32(nudAutoQuantity.Value));
+                            }
+                        }
+                    }
+                    //else if (!OpenPositions.Any() && OpenOrders.Any())
+                    else if (SymbolPosition.IsOpen == false && OpenOrdercheck == true && SymbolOrder.OrdType != "Stop" && chkManualControl.Checked == false)
+                    {
+                        if (rdoBuy.Checked && SymbolOrder.Side == "Sell")
+                        {
+                            if (Mode == "Buy")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                    AutoMakeOrder("Buy", Convert.ToInt32(nudAutoQuantity.Value));
+                                }
+                            }
+                            else if (Mode != "Buy")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                }
+                            }
+                        }
+                        else if (rdoSell.Checked && SymbolOrder.Side == "Buy")
+                        {
+                            if (Mode == "Sell")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                    AutoMakeOrder("Sell", Convert.ToInt32(nudAutoQuantity.Value));
+                                }
+                            }
+                            else if (Mode != "Sell")
+                            {
+                                if (OrderChange == true)
+                                {
+                                    OrderChange = false;
+                                }
+                                else
+                                {
+                                    string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                                }
+                            }
+                        }
+
+                        if (UpStop == true && SymbolOrder.Side == "Buy")
+                        {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            }
+                        }
+                        if (DownStop == true && SymbolOrder.Side == "Sell")
+                        {
+                            if (OrderChange == true)
+                            {
+                                OrderChange = false;
+                            }
+                            else
+                            {
+                                string result = bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            }
+                        }
+                    }
+
+                SkipToEndt:;
+
+                    break;
             }
 
 
@@ -3631,6 +4143,7 @@ namespace BitmexSampleBotGoran
                 }
 
                 #region ATR
+                ATR1Period = Convert.ToInt32(nudATRPeriod.Value);
                 // ATR, setting TR
                 if (c.PCC == 0)
                 {
@@ -3670,6 +4183,112 @@ namespace BitmexSampleBotGoran
                 if (c.ATR1 != null) { c.ATR1 = Math.Round(Convert.ToDouble(c.ATR1), 4); }
                 if (c.ATR2 != null) { c.ATR2 = Math.Round(Convert.ToDouble(c.ATR2), 4); }
                 #endregion ATR
+
+                #region ATR Trailing Stop
+                ATRMultip = Convert.ToDouble(nudATRMultiplier.Value);
+
+                if (c.PCC == ATR1Period - 1)
+                {
+                    double NLoss1h = Convert.ToDouble(c.ATR1) * ATRMultip;
+
+                    if (c.Close > 0 && Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > 0)
+                    {
+                        c.ATRTrailingStop = Math.Max(0, Convert.ToDouble(c.Close) - NLoss1h);
+                    }
+                    else if (c.Close < 0 && Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < 0)
+                    {
+                        c.ATRTrailingStop = Math.Min(0, Convert.ToDouble(c.Close) + NLoss1h);
+                    }
+                    else if (c.Close > 0)
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) - NLoss1h;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) + NLoss1h;
+                    }
+
+                    if (Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < 0 && c.Close > 0)
+                    {
+                        c.ATRTrailingStopPOS = 1;
+                    }
+                    else if (Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > 0 && c.Close < 0)
+                    {
+                        c.ATRTrailingStopPOS = -1;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStopPOS = 0;
+                    }
+
+                    if (c.ATRTrailingStopPOS == -1)
+                    {
+                        c.ATRTS = "Down";
+                    }
+                    else if (c.ATRTrailingStopPOS == 1)
+                    {
+                        c.ATRTS = "Up";
+                    }
+                    else
+                    {
+                        c.ATRTS = "Blue";
+                    }
+
+                }
+                else if (c.PCC > ATR1Period - 1)
+                {
+                    double NLoss1h = Convert.ToDouble(c.ATR1) * ATRMultip;
+
+                    if (c.Close > Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStop = Math.Max(Convert.ToDouble(Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop), Convert.ToDouble(c.Close) - NLoss1h);
+                    }
+                    else if (c.Close < Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStop = Math.Min(Convert.ToDouble(Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop), Convert.ToDouble(c.Close) + NLoss1h);
+                    }
+                    else if (c.Close > Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) - NLoss1h;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) + NLoss1h;
+                    }
+
+
+
+                    if (Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && c.Close > Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStopPOS = 1;
+                    }
+                    else if (Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && c.Close < Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStopPOS = -1;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStopPOS = Candles1h.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStopPOS;
+                    }
+
+
+
+                    if (c.ATRTrailingStopPOS == -1)
+                    {
+                        c.ATRTS = "Down";
+                    }
+                    else if (c.ATRTrailingStopPOS == 1)
+                    {
+                        c.ATRTS = "Up";
+                    }
+                    else
+                    {
+                        c.ATRTS = "Blue";
+                    }
+
+                }
+                #endregion ATR Trailing Stop
+
 
                 #region RSI
                 // For RSI
@@ -3741,6 +4360,8 @@ namespace BitmexSampleBotGoran
             dgvCandles1h.Columns["EMA1"].Visible = false;
             dgvCandles1h.Columns["EMA2"].Visible = false;
             dgvCandles1h.Columns["EMA3"].Visible = false;
+            dgvCandles1h.Columns["ATRTrailingStop"].Visible = false;
+            dgvCandles1h.Columns["ATRTrailingStopPOS"].Visible = false;
             ////  dgvCandles.Columns["MACDLine"].Visible = false;
             ////  dgvCandles.Columns["MACDSignalLine"].Visible = false;
             dgvCandles1h.Columns["STOCHK"].Visible = false;
@@ -3952,6 +4573,8 @@ namespace BitmexSampleBotGoran
                 }
 
                 #region ATR
+
+                ATR1Period = Convert.ToInt32(nudATRPeriod.Value);
                 // ATR, setting TR
                 if (c.PCC == 0)
                 {
@@ -3991,6 +4614,114 @@ namespace BitmexSampleBotGoran
                 if (c.ATR1 != null) { c.ATR1 = Math.Round(Convert.ToDouble(c.ATR1), 4); }
                 if (c.ATR2 != null) { c.ATR2 = Math.Round(Convert.ToDouble(c.ATR2), 4); }
                 #endregion ATR
+
+                #region ATR Trailing Stop
+
+                ATRMultip = Convert.ToDouble(nudATRMultiplier.Value);
+
+                if (c.PCC == ATR1Period - 1)
+                {
+                    double NLoss1d = Convert.ToDouble(c.ATR1) * ATRMultip;
+
+                    if (c.Close > 0 && Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > 0)
+                    {
+                        c.ATRTrailingStop = Math.Max(0, Convert.ToDouble(c.Close) - NLoss1d);
+                    }
+                    else if (c.Close < 0 && Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < 0)
+                    {
+                        c.ATRTrailingStop = Math.Min(0, Convert.ToDouble(c.Close) + NLoss1d);
+                    }
+                    else if (c.Close > 0)
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) - NLoss1d;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) + NLoss1d;
+                    }
+
+                    if (Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < 0 && c.Close > 0)
+                    {
+                        c.ATRTrailingStopPOS = 1;
+                    }
+                    else if (Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > 0 && c.Close < 0)
+                    {
+                        c.ATRTrailingStopPOS = -1;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStopPOS = 0;
+                    }
+
+                    if (c.ATRTrailingStopPOS == -1)
+                    {
+                        c.ATRTS = "Down";
+                    }
+                    else if (c.ATRTrailingStopPOS == 1)
+                    {
+                        c.ATRTS = "Up";
+                    }
+                    else
+                    {
+                        c.ATRTS = "Blue";
+                    }
+
+                }
+                else if (c.PCC > ATR1Period - 1)
+                {
+                    double NLoss1d = Convert.ToDouble(c.ATR1) * ATRMultip;
+
+                    if (c.Close > Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStop = Math.Max(Convert.ToDouble(Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop), Convert.ToDouble(c.Close) - NLoss1d);
+                    }
+                    else if (c.Close < Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStop = Math.Min(Convert.ToDouble(Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop), Convert.ToDouble(c.Close) + NLoss1d);
+                    }
+                    else if (c.Close > Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) - NLoss1d;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStop = Convert.ToDouble(c.Close) + NLoss1d;
+                    }
+
+
+
+                    if (Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close < Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && c.Close > Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStopPOS = 1;
+                    }
+                    else if (Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).Close > Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop && c.Close < Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStop)
+                    {
+                        c.ATRTrailingStopPOS = -1;
+                    }
+                    else
+                    {
+                        c.ATRTrailingStopPOS = Candles1d.Where(a => a.TimeStamp <= c.TimeStamp).ElementAtOrDefault(c.PCC - 1).ATRTrailingStopPOS;
+                    }
+
+
+
+                    if (c.ATRTrailingStopPOS == -1)
+                    {
+                        c.ATRTS = "Down";
+                    }
+                    else if (c.ATRTrailingStopPOS == 1)
+                    {
+                        c.ATRTS = "Up";
+                    }
+                    else
+                    {
+                        c.ATRTS = "Blue";
+                    }
+
+                }
+                #endregion ATR Trailing Stop
+
+
 
                 #region RSI
                 // For RSI
@@ -4057,11 +4788,13 @@ namespace BitmexSampleBotGoran
             // Show Candles
             dgvCandles1d.DataSource = Candles1d;
 
-            //dgvCandles1d.Columns["MA1"].Visible = false;
-            //dgvCandles1d.Columns["MA2"].Visible = false;
+            dgvCandles1d.Columns["MA1"].Visible = false;
+            dgvCandles1d.Columns["MA2"].Visible = false;
             dgvCandles1d.Columns["EMA1"].Visible = false;
             dgvCandles1d.Columns["EMA2"].Visible = false;
             dgvCandles1d.Columns["EMA3"].Visible = false;
+            dgvCandles1h.Columns["ATRTrailingStop"].Visible = false;
+            dgvCandles1h.Columns["ATRTrailingStopPOS"].Visible = false;
             ////  dgvCandles.Columns["MACDLine"].Visible = false;
             ////  dgvCandles.Columns["MACDSignalLine"].Visible = false;
             dgvCandles1d.Columns["STOCHK"].Visible = false;
@@ -4124,6 +4857,10 @@ namespace BitmexSampleBotGoran
             {
                 bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
             }
+            if (ddlStrategyType.SelectedIndex == 2 && (SymbolOrder.OrdStatus == "New" || SymbolOrder.OrdStatus == "PartiallyFilled") && NotStopLoss == true)
+            {
+                bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+            }
         }
 
         private void nudStartTrailingProfit_ValueChanged(object sender, EventArgs e)
@@ -4148,6 +4885,20 @@ namespace BitmexSampleBotGoran
             {
                 bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
             }
+        }
+
+        private void nudATRPeriod_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateCandles1d();
+            UpdateCandles1h();
+            UpdateCandles();
+        }
+
+        private void nudATRMultiplier_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateCandles1d();
+            UpdateCandles1h();
+            UpdateCandles();
         }
     }
 }

@@ -225,7 +225,7 @@ namespace BitmexSampleBotGoran
 
         private void InitializeDropdownsAndSettings()
         {            
-            ddNetwork.SelectedIndex = 0;
+            ddNetwork.SelectedIndex = 1;
             ddOrderType.SelectedIndex = 1;
             ddlCandleTimes.SelectedIndex = 0;
             ddlAutoOrderType.SelectedIndex = 1;

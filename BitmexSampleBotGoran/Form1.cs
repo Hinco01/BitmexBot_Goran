@@ -2020,7 +2020,7 @@ namespace BitmexSampleBotGoran
                         //    Dblcheck = 0;
                         //    DblcheckSell = 0;
                         //}
-                        if ((Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 2) && (Candles[0].Close < Candles[0].BBUpper) && (Candles[0].RSI <= (50 + Convert.ToInt32(nupRSIDifferenceThree.Value))))
+                        if ((Candles[1].TDUoD == "Up") && (Candles[1].TDSeq == 2) && (Candles[1].Close < Candles[1].BBUpper) && (Candles[1].RSI <= (50 + Convert.ToInt32(nupRSIDifferenceThree.Value))))
                         {
                            // Did the last full candle have MACDLine cross above MACDSignalLine?  We'll need to buy now.
                            // Dblcheck++;
@@ -2077,7 +2077,7 @@ namespace BitmexSampleBotGoran
                         //    Dblcheck = 0;
                         //    DblcheckSell = 0;
                         //}
-                        if ((Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 2) && (Candles[0].Close > Candles[0].BBLower) && (Candles[0].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
+                        if ((Candles[1].TDUoD == "Down") && (Candles[1].TDSeq == 2) && (Candles[1].Close > Candles[1].BBLower) && (Candles[1].RSI >= (50 - Convert.ToInt32(nupRSIDifference.Value))))
                         {
                             // Did the last full candle have MA1 cross below MA2?  We'll need to sell now
                             //DblcheckSell++;

@@ -225,7 +225,7 @@ namespace BitmexSampleBotGoran
 
         private void InitializeDropdownsAndSettings()
         {            
-            ddNetwork.SelectedIndex = 1;
+            ddNetwork.SelectedIndex = 0;
             ddOrderType.SelectedIndex = 1;
             ddlCandleTimes.SelectedIndex = 0;
             ddlAutoOrderType.SelectedIndex = 1;
@@ -2262,12 +2262,12 @@ namespace BitmexSampleBotGoran
                 case "Strat3":
 
 
-                    if ((Candles[0].MACDHistorgram > 0 && Candles[1].MACDHistorgram > 0 && Candles[2].MACDHistorgram > 0 && Candles[3].MACDHistorgram > 0 && Candles[4].MACDHistorgram > 0))
+                    if (Candles[0].MACDHistorgram > 0 && Candles[1].MACDHistorgram > 0 && Candles[2].MACDHistorgram > 0 && Candles[3].MACDHistorgram > 0 && Candles[4].MACDHistorgram > 0 && Convert.ToDecimal(Prices[ActiveInstrument.Symbol]) > Convert.ToDecimal(nudShortLimit.Value))
                     {
                         rdoSell.Checked = true;
                         rdoBuy.Checked = false;
                     }
-                    else if ((Candles[0].MACDHistorgram < 0 && Candles[1].MACDHistorgram < 0 && Candles[2].MACDHistorgram < 0 && Candles[3].MACDHistorgram < 0 && Candles[4].MACDHistorgram < 0))
+                    else if (Candles[0].MACDHistorgram < 0 && Candles[1].MACDHistorgram < 0 && Candles[2].MACDHistorgram < 0 && Candles[3].MACDHistorgram < 0 && Candles[4].MACDHistorgram < 0 && Convert.ToDecimal(Prices[ActiveInstrument.Symbol]) < Convert.ToDecimal(nudLongLimit.Value))
                     {
                         rdoSell.Checked = false;
                         rdoBuy.Checked = true;

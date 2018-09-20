@@ -211,6 +211,18 @@ namespace BitmexSampleBotGoran
         bool HourCandleFiratTime = true;
         bool DayCandleFiratTime = true;
 
+        bool FirstDCA = true;
+        int DCAAutoReOrderSec = 0;
+        String DCASide;
+        decimal DCATriggerPrice = 0;
+        decimal DCALimitPrice = 0;
+        decimal DCAOrderPriceOld = 0;
+        bool DCARunning = false;
+        bool DCAOrderPriceCheck = false;
+        bool DCALiquidationLimitReached = true;
+        decimal DCALowCheckPercent = Convert.ToDecimal(0.0026);
+
+
         public Form1()
         {
             InitializeComponent();
@@ -225,11 +237,12 @@ namespace BitmexSampleBotGoran
 
         private void InitializeDropdownsAndSettings()
         {            
-            ddNetwork.SelectedIndex = 1;
+            ddNetwork.SelectedIndex = 0;
             ddOrderType.SelectedIndex = 1;
             ddlCandleTimes.SelectedIndex = 0;
             ddlAutoOrderType.SelectedIndex = 1;
             ddlStrategyType.SelectedIndex = 0;
+            ddlDCA.SelectedIndex = 0;
 
             LoadAPISettings();
         }
@@ -2262,12 +2275,12 @@ namespace BitmexSampleBotGoran
                 case "Strat3":
 
 
-                    if ((Candles[0].MACDHistorgram > 0 && Candles[1].MACDHistorgram > 0 && Candles[2].MACDHistorgram > 0 && Candles[3].MACDHistorgram > 0 && Candles[4].MACDHistorgram > 0))
+                    if (Candles[0].MACDHistorgram > 0 && Candles[1].MACDHistorgram > 0 && Candles[2].MACDHistorgram > 0 && Candles[3].MACDHistorgram > 0 && Candles[4].MACDHistorgram > 0 && chkStrategyThreeShort.Checked == true)
                     {
                         rdoSell.Checked = true;
                         rdoBuy.Checked = false;
                     }
-                    else if ((Candles[0].MACDHistorgram < 0 && Candles[1].MACDHistorgram < 0 && Candles[2].MACDHistorgram < 0 && Candles[3].MACDHistorgram < 0 && Candles[4].MACDHistorgram < 0))
+                    else if (Candles[0].MACDHistorgram < 0 && Candles[1].MACDHistorgram < 0 && Candles[2].MACDHistorgram < 0 && Candles[3].MACDHistorgram < 0 && Candles[4].MACDHistorgram < 0 && chkStrategyThreeLong.Checked == true)
                     {
                         rdoSell.Checked = false;
                         rdoBuy.Checked = true;
@@ -3732,11 +3745,11 @@ namespace BitmexSampleBotGoran
                 txtOrderSide.Text = SymbolOrder.Side;
                 txtOrderType.Text = SymbolOrder.OrdType;
 
-                if (SymbolOrder.OrdType != "Stop")
+                if (SymbolOrder.OrdType != "Stop" && SymbolOrder.OrdType != "LimitIfTouched")
                 {
                     txtTrailingProfitStart.Text = "";
                 }
-                else if (SymbolOrder.OrdType == "Stop")
+                else if (SymbolOrder.OrdType == "Stop" || SymbolOrder.OrdType == "LimitIfTouched")
                 {
                     txtTrailingProfitStart.Text = SymbolOrder.StopPx.ToString();
                 }
@@ -3850,6 +3863,20 @@ namespace BitmexSampleBotGoran
             else if (rdoSell.Checked)
             {
                 lblRetry.Text = "Sell tries: " + DblcheckSell.ToString();
+            }           
+
+            if (chkDCA.Checked == true && DCARunning == true)
+            {
+                if (ddlDCA.SelectedIndex == 0)
+                {
+                    txtLiqudationLimitCalculated.Text = Convert.ToString(Prices[ActiveInstrument.Symbol] - nudLiquidationLimit.Value);
+                }
+                if (ddlDCA.SelectedIndex == 1)
+                {
+                    txtLiqudationLimitCalculated.Text = Convert.ToString(Prices[ActiveInstrument.Symbol] + nudLiquidationLimit.Value);
+                }
+
+                DCA();
             }
 
         }
@@ -3873,11 +3900,15 @@ namespace BitmexSampleBotGoran
 
         private void AutoQuantityCheck()
         {
-            nudAutoQuantity.Value = ((nudPercentToTrade.Value / 100) * Balance) * Prices["XBTUSD"] * 5;
-            nudAutoQuantity.Value = Math.Round(nudAutoQuantity.Value);
+            nudAutoQuantity.Value = Math.Round(((nudPercentToTrade.Value / 100) * Balance) * Prices["XBTUSD"] * 5);
+            //nudAutoQuantity.Value = Math.Round(nudAutoQuantity.Value);
 
-            nupQty.Value = ((nudPercentToTrade.Value / 100) * Balance) * Prices["XBTUSD"] * 5;
-            nupQty.Value = Math.Round(nupQty.Value);
+            nupQty.Value = Math.Round(((nudPercentToTrade.Value / 100) * Balance) * Prices["XBTUSD"]);
+            if (nupQty.Value < Convert.ToDecimal(19))
+            {
+                nupQty.Value = Convert.ToDecimal(19);
+            }
+            //nupQty.Value = Math.Round(nupQty.Value);
         }
 
         private void nudPercentToTrade_ValueChanged(object sender, EventArgs e)
@@ -4896,6 +4927,427 @@ namespace BitmexSampleBotGoran
             UpdateCandles1d();
             UpdateCandles1h();
             UpdateCandles();
+        }
+
+        private void chkDCA_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkDCA.Checked == true)
+            {
+                btnAutomatedTrading.Enabled = false;
+                ddlStrategyType.Enabled = false;
+                rdoBuy.Enabled = false;
+                rdoSell.Enabled = false;
+                rdoSwitch.Enabled = false;
+                chkManualControl.Enabled = false;
+                nudPriceChange.Enabled = false;
+                nupRSIDifferenceThree.Enabled = false;
+                chkStopLoss.Enabled = false;
+                nudStartStopLoss.Enabled = false;
+                nudExecuteStopLoss.Enabled = false;
+                nudPercentEarn.Enabled = false;
+                nupRSIDifference.Enabled = false;
+                nudStartTrailingProfit.Enabled = false;
+                nudExecuteTrailingProfit.Enabled = false;
+                chkManualControl.Enabled = false;
+                nudMA1.Enabled = false;
+                nudMA2.Enabled = false;
+                nudATRPeriod.Enabled = false;
+                nudATRMultiplier.Enabled = false;
+                ddlAutoOrderType.Enabled = false;
+                btnBuy.Enabled = false;
+                btnSell.Enabled = false;
+                btnDCA.Enabled = true;
+                chkStrategyThreeShort.Enabled = false;
+                chkStrategyThreeLong.Enabled = false;
+            }
+            else
+            {
+                btnAutomatedTrading.Enabled = true;
+                ddlStrategyType.Enabled = true;
+                rdoBuy.Enabled = true;
+                rdoSell.Enabled = true;
+                rdoSwitch.Enabled = true;
+                chkManualControl.Enabled = true;
+                nudPriceChange.Enabled = true;
+                nupRSIDifferenceThree.Enabled = true;
+                chkStopLoss.Enabled = true;
+                nudStartStopLoss.Enabled = true;
+                nudExecuteStopLoss.Enabled = true;
+                nudPercentEarn.Enabled = true;
+                nupRSIDifference.Enabled = true;
+                nudStartTrailingProfit.Enabled = true;
+                nudExecuteTrailingProfit.Enabled = true;
+                chkManualControl.Enabled = true;
+                nudMA1.Enabled = true;
+                nudMA2.Enabled = true;
+                nudATRPeriod.Enabled = true;
+                nudATRMultiplier.Enabled = true;
+                ddlAutoOrderType.Enabled = true;
+                btnBuy.Enabled = true;
+                btnSell.Enabled = true;
+                btnDCA.Enabled = false;
+                chkStrategyThreeShort.Enabled = true;
+                chkStrategyThreeLong.Enabled = true;
+            }
+        }
+
+        private void DCA()
+        {
+
+            if (SymbolPosition.IsOpen == true && ddlDCA.SelectedIndex == 0 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) <= Prices[ActiveInstrument.Symbol])
+            {
+                nudPercentToTrade.Value = nudDCALow.Value;
+                DCALowCheckPercent = (nudPercentToTrade.Value / 100) * Balance;
+                if(DCALowCheckPercent < Convert.ToDecimal(0.0026))
+                {
+                    DCALowCheckPercent = Convert.ToDecimal(0.0026);
+                }
+
+                nupQty.Value = Math.Round(DCALowCheckPercent * Prices["XBTUSD"]);                
+                //nupQty.Value = Math.Round(nupQty.Value);
+            }
+            else if (SymbolPosition.IsOpen == true && ddlDCA.SelectedIndex == 0 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) > Prices[ActiveInstrument.Symbol])
+            {
+                nudPercentToTrade.Value = Math.Round((nudDCAHigh.Value + ((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - Prices[ActiveInstrument.Symbol]) / Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * Convert.ToDecimal(100))), 2);
+                if (nudPercentToTrade.Value > Convert.ToDecimal(8))
+                {
+                    nudPercentToTrade.Value = Convert.ToDecimal(8);
+                }
+                DCALowCheckPercent = (nudPercentToTrade.Value / 100) * Balance;
+                if (DCALowCheckPercent < Convert.ToDecimal(0.0026))
+                {
+                    DCALowCheckPercent = Convert.ToDecimal(0.0026);
+                }
+
+                nupQty.Value = Math.Round(DCALowCheckPercent * Prices["XBTUSD"]);                
+                //nupQty.Value = Math.Round(nupQty.Value);
+            }
+            else if (SymbolPosition.IsOpen == true && ddlDCA.SelectedIndex == 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) >= Prices[ActiveInstrument.Symbol])
+            {
+                nudPercentToTrade.Value = nudDCALow.Value;
+                DCALowCheckPercent = (nudPercentToTrade.Value / 100) * Balance;
+                if (DCALowCheckPercent < Convert.ToDecimal(0.0026))
+                {
+                    DCALowCheckPercent = Convert.ToDecimal(0.0026);
+                }
+
+                nupQty.Value = Math.Round(DCALowCheckPercent * Prices["XBTUSD"]);
+                //nupQty.Value = Math.Round(nupQty.Value);
+            }
+            else if (SymbolPosition.IsOpen == true && ddlDCA.SelectedIndex == 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) < Prices[ActiveInstrument.Symbol])
+            {
+                nudPercentToTrade.Value = Math.Round((nudDCAHigh.Value + ((Prices[ActiveInstrument.Symbol] - Convert.ToDecimal(SymbolPosition.AvgEntryPrice)) / Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * Convert.ToDecimal(100))), 2);
+                if (nudPercentToTrade.Value > Convert.ToDecimal(8))
+                {
+                    nudPercentToTrade.Value = Convert.ToDecimal(8);
+                }
+                DCALowCheckPercent = (nudPercentToTrade.Value / 100) * Balance;
+                if (DCALowCheckPercent < Convert.ToDecimal(0.0026))
+                {
+                    DCALowCheckPercent = Convert.ToDecimal(0.0026);
+                }
+
+                nupQty.Value = Math.Round(DCALowCheckPercent * Prices["XBTUSD"]);                
+                //nupQty.Value = Math.Round(nupQty.Value);
+            }
+            else if (SymbolPosition.IsOpen == false)
+            {
+                nudPercentToTrade.Value = nudDCALow.Value;
+                DCALowCheckPercent = (nudPercentToTrade.Value / 100) * Balance;
+                if (DCALowCheckPercent < Convert.ToDecimal(0.0026))
+                {
+                    DCALowCheckPercent = Convert.ToDecimal(0.0026);
+                }
+
+                nupQty.Value = Math.Round(DCALowCheckPercent * Prices["XBTUSD"]);
+                //nupQty.Value = Math.Round(nupQty.Value);
+            }
+
+
+
+            if (chkAutoReOrder.Checked == false)
+            {
+                DCAAutoReOrderSec = Convert.ToInt32(nudAutoReOrderTime.Value);
+            }
+
+            if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0)
+            {
+                DCATriggerPrice = Math.Floor((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) + Convert.ToDecimal(nudDCATPLTrigger.Value)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                DCALimitPrice = Math.Floor((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - ((Convert.ToDecimal(nudDCATPLLimit.Value) / 100) * Convert.ToDecimal(SymbolPosition.AvgEntryPrice))) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                txtDCATPLTrigger.Text = DCATriggerPrice.ToString();
+                txtDCATPLLimit.Text = DCALimitPrice.ToString();
+
+                DCASide = "Buy";
+            }
+            else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0)
+            {
+                DCATriggerPrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - Convert.ToDecimal(nudDCATPLTrigger.Value)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+                DCALimitPrice = Math.Ceiling(((1 + (Convert.ToDecimal(nudDCATPLLimit.Value) / 100)) * Convert.ToDecimal(SymbolPosition.AvgEntryPrice)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
+
+                txtDCATPLTrigger.Text = DCATriggerPrice.ToString();
+                txtDCATPLLimit.Text = DCALimitPrice.ToString();
+
+                DCASide = "Sell";
+            }           
+           
+
+
+            if (DCAAutoReOrderSec >= Convert.ToInt32(nudAutoReOrderTime.Value) && chkAutoReOrder.Checked == true)
+            {
+                DCAAutoReOrderSec = 0;
+
+                if(SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0 && Convert.ToDecimal(SymbolPosition.LiquidationPrice) < Convert.ToDecimal(txtLiqudationLimitCalculated.Text) && ddlDCA.SelectedIndex == 0)
+                {
+                    if (nupQty.Value > 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) <= Prices[ActiveInstrument.Symbol] && chkDCALowYesNo.Checked == true)
+                    {
+
+
+
+                        MakeOrder("Buy", Convert.ToInt32(nupQty.Value));
+
+
+
+
+
+                        if (DCALimitPrice <= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] + Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = true;
+                    }
+                    else if (nupQty.Value > 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) > Prices[ActiveInstrument.Symbol])
+                    {
+                        MakeOrder("Buy", Convert.ToInt32(nupQty.Value));
+
+                        if (DCALimitPrice <= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] + Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = true;
+                    }
+                    else
+                    {
+                        if (DCALiquidationLimitReached == true)
+                        {
+                            bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            if (DCALimitPrice <= Prices[ActiveInstrument.Symbol])
+                            {
+                                DCALimitPrice = Prices[ActiveInstrument.Symbol] + Convert.ToDecimal(0.5);
+                            }
+                            bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                            DCALiquidationLimitReached = false;
+                        }                        
+                    }                    
+                }
+                else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0 && Convert.ToDecimal(SymbolPosition.LiquidationPrice) > Convert.ToDecimal(txtLiqudationLimitCalculated.Text) && ddlDCA.SelectedIndex == 1)
+                {
+                    if (nupQty.Value > 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) >= Prices[ActiveInstrument.Symbol] && chkDCALowYesNo.Checked == true)
+                    {
+                        MakeOrder("Sell", Convert.ToInt32(nupQty.Value));
+                        if (DCALimitPrice >= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] - Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = true;
+                    }
+                    else if (nupQty.Value > 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) < Prices[ActiveInstrument.Symbol] && chkDCALowYesNo.Checked == true)
+                    {
+                        MakeOrder("Sell", Convert.ToInt32(nupQty.Value));
+                        if (DCALimitPrice >= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] - Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = true;
+                    }
+                    else
+                    {
+                        if (DCALiquidationLimitReached == true)
+                        {
+                            bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            if (DCALimitPrice >= Prices[ActiveInstrument.Symbol])
+                            {
+                                DCALimitPrice = Prices[ActiveInstrument.Symbol] - Convert.ToDecimal(0.5);
+                            }
+                            bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                            DCALiquidationLimitReached = false;
+                        }
+                    }
+
+                }
+                else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0 && Convert.ToDecimal(SymbolPosition.LiquidationPrice) >= Convert.ToDecimal(txtLiqudationLimitCalculated.Text) && chkStopAtLiquidationLimit.Checked == false && ddlDCA.SelectedIndex == 0)
+                {
+                    if (nupQty.Value > 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) <= Prices[ActiveInstrument.Symbol] && chkDCALowYesNo.Checked == true)
+                    {
+                        MakeOrder("Buy", Convert.ToInt32(nupQty.Value));
+                        if (DCALimitPrice <= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] + Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = true;
+                    }
+                    else if (nupQty.Value > 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) > Prices[ActiveInstrument.Symbol])
+                    {
+                        MakeOrder("Buy", Convert.ToInt32(nupQty.Value));
+                        if (DCALimitPrice <= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] + Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = true;
+                    }
+                    else
+                    {
+                        if (DCALiquidationLimitReached == true)
+                        {
+                            bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            if (DCALimitPrice <= Prices[ActiveInstrument.Symbol])
+                            {
+                                DCALimitPrice = Prices[ActiveInstrument.Symbol] + Convert.ToDecimal(0.5);
+                            }
+                            bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                            DCALiquidationLimitReached = false;
+                        }
+                    }                    
+                }
+                else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0 && Convert.ToDecimal(SymbolPosition.LiquidationPrice) <= Convert.ToDecimal(txtLiqudationLimitCalculated.Text) && chkStopAtLiquidationLimit.Checked == false && ddlDCA.SelectedIndex == 1)
+                {
+                    if (nupQty.Value > 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) >= Prices[ActiveInstrument.Symbol] && chkDCALowYesNo.Checked == true)
+                    {
+                        MakeOrder("Sell", Convert.ToInt32(nupQty.Value));
+                        if (DCALimitPrice >= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] - Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = true;
+                    }
+                    else if (nupQty.Value > 1 && Convert.ToDecimal(SymbolPosition.AvgEntryPrice) < Prices[ActiveInstrument.Symbol] && chkDCALowYesNo.Checked == true)
+                    {
+                        MakeOrder("Sell", Convert.ToInt32(nupQty.Value));
+                        if (DCALimitPrice >= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] - Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = true;
+                    }
+                    else
+                    {
+                        if (DCALiquidationLimitReached == true)
+                        {
+                            bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                            if (DCALimitPrice >= Prices[ActiveInstrument.Symbol])
+                            {
+                                DCALimitPrice = Prices[ActiveInstrument.Symbol] - Convert.ToDecimal(0.5);
+                            }
+                            bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                            DCALiquidationLimitReached = false;
+                        }
+                    }
+                }
+                else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0 && Convert.ToDecimal(SymbolPosition.LiquidationPrice) >= Convert.ToDecimal(txtLiqudationLimitCalculated.Text) && chkStopAtLiquidationLimit.Checked == true)
+                {
+                    if (DCALiquidationLimitReached == true)
+                    {
+                        bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                        if (DCALimitPrice <= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] + Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = false;
+                    }
+                }
+                else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0 && Convert.ToDecimal(SymbolPosition.LiquidationPrice) <= Convert.ToDecimal(txtLiqudationLimitCalculated.Text) && chkStopAtLiquidationLimit.Checked == true)
+                {
+                    if (DCALiquidationLimitReached == true)
+                    {
+                        bitmex.CancelAllOpenOrders(ActiveInstrument.Symbol);
+                        if (DCALimitPrice >= Prices[ActiveInstrument.Symbol])
+                        {
+                            DCALimitPrice = Prices[ActiveInstrument.Symbol] - Convert.ToDecimal(0.5);
+                        }
+                        bitmex.TrailingProfit(ActiveInstrument.Symbol, DCASide, DCALimitPrice, DCATriggerPrice);
+                        DCALiquidationLimitReached = false;
+                    }                    
+                }
+                else if (SymbolPosition.IsOpen == false && ddlDCA.SelectedIndex == 0)
+                {
+                    if (nupQty.Value > 1)
+                    {
+                        MakeOrder("Buy", Convert.ToInt32(nupQty.Value));
+                        DCALiquidationLimitReached = true;
+                    }
+                    else
+                    {
+                        DCALiquidationLimitReached = true;
+                    }
+                }
+                else if (SymbolPosition.IsOpen == false && ddlDCA.SelectedIndex == 1)
+                {
+                    if (nupQty.Value > 1)
+                    {
+                        MakeOrder("Sell", Convert.ToInt32(nupQty.Value));
+                        DCALiquidationLimitReached = true;
+                    }
+                    else
+                    {
+                        DCALiquidationLimitReached = true;
+                    }
+
+                }
+
+
+            }
+            else
+            {
+                DCAAutoReOrderSec++;
+            }            
+        }
+
+        private void chkAutoReOrder_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkAutoReOrder.Checked == false)
+            {
+                DCAAutoReOrderSec = Convert.ToInt32(nudAutoReOrderTime.Value);
+            }
+        }
+
+        private void btnDCA_Click(object sender, EventArgs e)
+        {
+            if (btnDCA.Text == "DCA")
+            {
+                btnDCA.Text = "DCA - Stop";
+                btnDCA.BackColor = Color.Red;
+                DCARunning = true;
+                ddlDCA.Enabled = false;
+                nudPercentToTrade.Enabled = false;
+                chkDCA.Enabled = false;
+                DCAAutoReOrderSec = Convert.ToInt32(nudAutoReOrderTime.Value);
+
+            }
+            else
+            {
+
+                btnDCA.Text = "DCA";
+                btnDCA.BackColor = Color.LightGreen;
+                DCARunning = false;
+                nudPercentToTrade.Enabled = true;
+                chkDCA.Enabled = true;
+                ddlDCA.Enabled = true;
+
+            }
+        }
+
+        private void nudMA1_ValueChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

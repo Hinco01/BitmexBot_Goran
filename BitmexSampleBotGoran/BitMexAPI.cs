@@ -356,17 +356,17 @@ namespace BitMEX
             return res;
         }
 
-        public string TrailingProfit(string Symbol, string Side, decimal Price, decimal StopPrice, int Quantity)
+        public string TrailingProfit(string Symbol, string Side, decimal Price, decimal StopPrice)
         {
             var param = new Dictionary<string, string>();
             param["symbol"] = Symbol;
             param["side"] = Side;
-            param["orderQty"] = Quantity.ToString();
+            //param["orderQty"] = Quantity.ToString();
             param["price"] = Price.ToString().Replace(",", ".");
             param["stopPx"] = StopPrice.ToString().Replace(",", ".");
             param["ordType"] = "LimitIfTouched";
             param["timeInForce"] = "GoodTillCancel";
-            param["execInst"] = "Close,LastPrice,ParticipateDoNotInitiate";
+            param["execInst"] = "Close,LastPrice";
 
             string res = Query("POST", "/order", param, true);
             int RetryAttemptCount = 0;

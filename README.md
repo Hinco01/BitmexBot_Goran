@@ -15,7 +15,7 @@ Twitter: https://twitter.com/BigBitsYouTube
 BTC: 33biFCDFEZn3hLJcGKLR5Muu9oeRWBAFEX
 #
 #
-My own copy for testing purposes only. No warranty !!!
+My own copy for testing purposes only. No warranty !!!!
 
 Bitmex: https://www.bitmex.com/register/gfjJtz
 

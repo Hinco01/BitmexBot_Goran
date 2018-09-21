@@ -17,7 +17,7 @@ using System.Globalization;
 
 // feees in Bitmex  Total Fees = 100 [leverage] x $1,000 [Margin] x 0.00075 [Rate for Market order] x 2 [Entry + Exit] = $150
 // 5 * real btc * 0,0005 = limit + market + 5x
-
+//updted
 namespace BitmexSampleBotGoran
 {
     public partial class Form1 : Form

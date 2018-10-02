@@ -152,14 +152,16 @@
             this.nudATRMultiplier = new System.Windows.Forms.NumericUpDown();
             this.nudATRPeriod = new System.Windows.Forms.NumericUpDown();
             this.groupBox10 = new System.Windows.Forms.GroupBox();
+            this.label42 = new System.Windows.Forms.Label();
+            this.label41 = new System.Windows.Forms.Label();
+            this.nudLongLimit = new System.Windows.Forms.NumericUpDown();
+            this.nudShortLimit = new System.Windows.Forms.NumericUpDown();
             this.label40 = new System.Windows.Forms.Label();
             this.nudPriceChange = new System.Windows.Forms.NumericUpDown();
             this.label39 = new System.Windows.Forms.Label();
             this.nupRSIDifferenceThree = new System.Windows.Forms.NumericUpDown();
-            this.nudShortLimit = new System.Windows.Forms.NumericUpDown();
-            this.nudLongLimit = new System.Windows.Forms.NumericUpDown();
-            this.label41 = new System.Windows.Forms.Label();
-            this.label42 = new System.Windows.Forms.Label();
+            this.nudLeverage = new System.Windows.Forms.NumericUpDown();
+            this.label43 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nupQty)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles1d)).BeginInit();
@@ -188,10 +190,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudATRMultiplier)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudATRPeriod)).BeginInit();
             this.groupBox10.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLongLimit)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudShortLimit)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPriceChange)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifferenceThree)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudShortLimit)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudLongLimit)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLeverage)).BeginInit();
             this.SuspendLayout();
             // 
             // btnBuy
@@ -504,6 +507,8 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label43);
+            this.groupBox2.Controls.Add(this.nudLeverage);
             this.groupBox2.Controls.Add(this.chkManualControl);
             this.groupBox2.Controls.Add(this.label33);
             this.groupBox2.Controls.Add(this.ddlStrategyType);
@@ -1626,6 +1631,80 @@
             this.groupBox10.TabStop = false;
             this.groupBox10.Text = "Strategy 3";
             // 
+            // label42
+            // 
+            this.label42.AutoSize = true;
+            this.label42.Location = new System.Drawing.Point(74, 69);
+            this.label42.Name = "label42";
+            this.label42.Size = new System.Drawing.Size(55, 13);
+            this.label42.TabIndex = 34;
+            this.label42.Text = "Long Limit";
+            // 
+            // label41
+            // 
+            this.label41.AutoSize = true;
+            this.label41.Location = new System.Drawing.Point(3, 69);
+            this.label41.Name = "label41";
+            this.label41.Size = new System.Drawing.Size(56, 13);
+            this.label41.TabIndex = 33;
+            this.label41.Text = "Short Limit";
+            // 
+            // nudLongLimit
+            // 
+            this.nudLongLimit.DecimalPlaces = 1;
+            this.nudLongLimit.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudLongLimit.Location = new System.Drawing.Point(77, 85);
+            this.nudLongLimit.Maximum = new decimal(new int[] {
+            1000000000,
+            0,
+            0,
+            0});
+            this.nudLongLimit.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudLongLimit.Name = "nudLongLimit";
+            this.nudLongLimit.Size = new System.Drawing.Size(60, 20);
+            this.nudLongLimit.TabIndex = 32;
+            this.nudLongLimit.Value = new decimal(new int[] {
+            7400,
+            0,
+            0,
+            0});
+            // 
+            // nudShortLimit
+            // 
+            this.nudShortLimit.DecimalPlaces = 1;
+            this.nudShortLimit.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudShortLimit.Location = new System.Drawing.Point(6, 85);
+            this.nudShortLimit.Maximum = new decimal(new int[] {
+            1000000000,
+            0,
+            0,
+            0});
+            this.nudShortLimit.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudShortLimit.Name = "nudShortLimit";
+            this.nudShortLimit.Size = new System.Drawing.Size(60, 20);
+            this.nudShortLimit.TabIndex = 31;
+            this.nudShortLimit.Value = new decimal(new int[] {
+            6500,
+            0,
+            0,
+            0});
+            // 
             // label40
             // 
             this.label40.AutoSize = true;
@@ -1694,79 +1773,42 @@
             0,
             -2147483648});
             // 
-            // nudShortLimit
+            // nudLeverage
             // 
-            this.nudShortLimit.DecimalPlaces = 1;
-            this.nudShortLimit.Increment = new decimal(new int[] {
-            5,
+            this.nudLeverage.DecimalPlaces = 2;
+            this.nudLeverage.Increment = new decimal(new int[] {
+            1,
             0,
             0,
-            65536});
-            this.nudShortLimit.Location = new System.Drawing.Point(6, 85);
-            this.nudShortLimit.Maximum = new decimal(new int[] {
-            10000,
+            131072});
+            this.nudLeverage.Location = new System.Drawing.Point(6, 178);
+            this.nudLeverage.Maximum = new decimal(new int[] {
+            1000,
             0,
             0,
             0});
-            this.nudShortLimit.Minimum = new decimal(new int[] {
-            5,
+            this.nudLeverage.Minimum = new decimal(new int[] {
+            100,
             0,
             0,
-            65536});
-            this.nudShortLimit.Name = "nudShortLimit";
-            this.nudShortLimit.Size = new System.Drawing.Size(60, 20);
-            this.nudShortLimit.TabIndex = 31;
-            this.nudShortLimit.Value = new decimal(new int[] {
-            6500,
+            131072});
+            this.nudLeverage.Name = "nudLeverage";
+            this.nudLeverage.Size = new System.Drawing.Size(60, 20);
+            this.nudLeverage.TabIndex = 27;
+            this.nudLeverage.Value = new decimal(new int[] {
+            500,
             0,
             0,
-            0});
+            131072});
             // 
-            // nudLongLimit
+            // label43
             // 
-            this.nudLongLimit.DecimalPlaces = 1;
-            this.nudLongLimit.Increment = new decimal(new int[] {
-            5,
-            0,
-            0,
-            65536});
-            this.nudLongLimit.Location = new System.Drawing.Point(77, 85);
-            this.nudLongLimit.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.nudLongLimit.Minimum = new decimal(new int[] {
-            5,
-            0,
-            0,
-            65536});
-            this.nudLongLimit.Name = "nudLongLimit";
-            this.nudLongLimit.Size = new System.Drawing.Size(60, 20);
-            this.nudLongLimit.TabIndex = 32;
-            this.nudLongLimit.Value = new decimal(new int[] {
-            7400,
-            0,
-            0,
-            0});
-            // 
-            // label41
-            // 
-            this.label41.AutoSize = true;
-            this.label41.Location = new System.Drawing.Point(3, 69);
-            this.label41.Name = "label41";
-            this.label41.Size = new System.Drawing.Size(56, 13);
-            this.label41.TabIndex = 33;
-            this.label41.Text = "Short Limit";
-            // 
-            // label42
-            // 
-            this.label42.AutoSize = true;
-            this.label42.Location = new System.Drawing.Point(74, 69);
-            this.label42.Name = "label42";
-            this.label42.Size = new System.Drawing.Size(55, 13);
-            this.label42.TabIndex = 34;
-            this.label42.Text = "Long Limit";
+            this.label43.AutoSize = true;
+            this.label43.Location = new System.Drawing.Point(72, 180);
+            this.label43.Name = "label43";
+            this.label43.Size = new System.Drawing.Size(52, 13);
+            this.label43.TabIndex = 33;
+            this.label43.Text = "Leverage";
             // 
             // Form1
             // 
@@ -1838,10 +1880,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudATRPeriod)).EndInit();
             this.groupBox10.ResumeLayout(false);
             this.groupBox10.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLongLimit)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudShortLimit)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPriceChange)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifferenceThree)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudShortLimit)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.nudLongLimit)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLeverage)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1979,6 +2022,8 @@
         private System.Windows.Forms.Label label41;
         private System.Windows.Forms.NumericUpDown nudLongLimit;
         private System.Windows.Forms.NumericUpDown nudShortLimit;
+        private System.Windows.Forms.Label label43;
+        private System.Windows.Forms.NumericUpDown nudLeverage;
     }
 }
 

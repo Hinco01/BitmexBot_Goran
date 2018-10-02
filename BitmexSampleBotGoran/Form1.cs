@@ -225,7 +225,7 @@ namespace BitmexSampleBotGoran
 
         private void InitializeDropdownsAndSettings()
         {            
-            ddNetwork.SelectedIndex = 0;
+            ddNetwork.SelectedIndex = 1;
             ddOrderType.SelectedIndex = 1;
             ddlCandleTimes.SelectedIndex = 0;
             ddlAutoOrderType.SelectedIndex = 1;
@@ -2454,10 +2454,10 @@ namespace BitmexSampleBotGoran
 
             if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0)
             {
-                StopLossStartPer = (Convert.ToDecimal(nudStartStopLoss.Value) / 5) / 100;
+                StopLossStartPer = (Convert.ToDecimal(nudStartStopLoss.Value) / nudLeverage.Value) / 100;
                 StopLossStartPrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - (Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossStartPer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
 
-                StopLossExecutePer = (Convert.ToDecimal(nudExecuteStopLoss.Value) / 5) / 100;
+                StopLossExecutePer = (Convert.ToDecimal(nudExecuteStopLoss.Value) / nudLeverage.Value) / 100;
                 StopLossExecutePrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - (Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossExecutePer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
 
                 StopLossCancelPer = StopLossStartPer / 2;
@@ -2469,13 +2469,13 @@ namespace BitmexSampleBotGoran
             }
             else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0)
             {
-                StopLossStartPer = 1 + ((Convert.ToDecimal(nudStartStopLoss.Value) / 5) / 100);
+                StopLossStartPer = 1 + ((Convert.ToDecimal(nudStartStopLoss.Value) / nudLeverage.Value) / 100);
                 StopLossStartPrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossStartPer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
 
-                StopLossExecutePer = 1 + ((Convert.ToDecimal(nudExecuteStopLoss.Value) / 5) / 100);
+                StopLossExecutePer = 1 + ((Convert.ToDecimal(nudExecuteStopLoss.Value) / nudLeverage.Value) / 100);
                 StopLossExecutePrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossExecutePer) / Convert.ToDecimal(.5)) *Convert.ToDecimal(.5);
 
-                StopLossCancelPer = 1 + (((Convert.ToDecimal(nudStartStopLoss.Value) / 5) / 100) / 2);
+                StopLossCancelPer = 1 + (((Convert.ToDecimal(nudStartStopLoss.Value) / nudLeverage.Value) / 100) / 2);
                 StopLossCancel = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * StopLossCancelPer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
 
                 txtStartStopLoss.Text = StopLossStartPrice.ToString();
@@ -2566,7 +2566,7 @@ namespace BitmexSampleBotGoran
                     if (SymbolPosition.CurrentQty > 0)
                     {
                         // NEW TEST LIMIT CLOSE OPEN POSITON
-                        decimal UserPercent = 1 + ((Convert.ToDecimal(nudPercentEarn.Value) / 5) / 100);
+                        decimal UserPercent = 1 + ((Convert.ToDecimal(nudPercentEarn.Value) / nudLeverage.Value) / 100);
                         decimal PriceLCOP = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * UserPercent) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
                         if (PriceLCOP < CalculateMarketOrderPrice("Sell"))
                         {
@@ -2595,7 +2595,7 @@ namespace BitmexSampleBotGoran
                     else if (SymbolPosition.CurrentQty < 0)
                     {
                         // NEW TEST LIMIT CLOSE OPEN POSITON
-                        decimal UserPercent = ((Convert.ToDecimal(nudPercentEarn.Value) / 5) / 100);
+                        decimal UserPercent = ((Convert.ToDecimal(nudPercentEarn.Value) / nudLeverage.Value) / 100);
                         decimal UserPercentageAmount = Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * UserPercent;
                         decimal PriceLCOP = Math.Floor((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - UserPercentageAmount) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
                         if (PriceLCOP > CalculateMarketOrderPrice("Buy"))
@@ -2795,10 +2795,10 @@ namespace BitmexSampleBotGoran
 
                     if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty < 0 && TrailigProfitOrderOpen == false)
                     {
-                        TrailingProfitStartPer = (Convert.ToDecimal(nudStartTrailingProfit.Value) / 5) / 100;
+                        TrailingProfitStartPer = (Convert.ToDecimal(nudStartTrailingProfit.Value) / nudLeverage.Value) / 100;
                         TrailingProfitStartPrice = Math.Floor((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) - (Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * TrailingProfitStartPer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
 
-                        TrailingProfitExecutePer = 1 + ((Convert.ToDecimal(nudExecuteTrailingProfit.Value) / 5) / 100);
+                        TrailingProfitExecutePer = 1 + ((Convert.ToDecimal(nudExecuteTrailingProfit.Value) / nudLeverage.Value) / 100);
                         TrailingProfitExecutePrice = Math.Floor((Convert.ToDecimal(TrailingProfitStartPrice) * TrailingProfitExecutePer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
 
                         txtTPStart.Text = TrailingProfitStartPrice.ToString();
@@ -2806,10 +2806,10 @@ namespace BitmexSampleBotGoran
                     }
                     else if (SymbolPosition.IsOpen == true && SymbolPosition.CurrentQty > 0 && TrailigProfitOrderOpen == false)
                     {
-                        TrailingProfitStartPer = 1 + ((Convert.ToDecimal(nudStartTrailingProfit.Value) / 5) / 100);
+                        TrailingProfitStartPer = 1 + ((Convert.ToDecimal(nudStartTrailingProfit.Value) / nudLeverage.Value) / 100);
                         TrailingProfitStartPrice = Math.Ceiling((Convert.ToDecimal(SymbolPosition.AvgEntryPrice) * TrailingProfitStartPer) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
 
-                        TrailingProfitExecutePer = (Convert.ToDecimal(nudExecuteTrailingProfit.Value) / 5) / 100;
+                        TrailingProfitExecutePer = (Convert.ToDecimal(nudExecuteTrailingProfit.Value) / nudLeverage.Value) / 100;
                         TrailingProfitExecutePrice = Math.Ceiling((TrailingProfitStartPrice - (TrailingProfitStartPrice * TrailingProfitExecutePer)) / Convert.ToDecimal(.5)) * Convert.ToDecimal(.5);
 
                         txtTPStart.Text = TrailingProfitStartPrice.ToString();
@@ -3764,7 +3764,7 @@ namespace BitmexSampleBotGoran
                 txtPositionLiquidation.Text = SymbolPosition.LiquidationPrice.ToString();
                 txtPositionMargin.Text = SymbolPosition.Leverage.ToString();
                 txtPositionUnrealizedPnL.Text = SymbolPosition.UsefulUnrealisedPnl.ToString();
-                txtPositionUnrealizedPnLPercent.Text = Math.Round(Convert.ToDecimal(SymbolPosition.UnrealisedPnlPcnt * 5 * 100), 2).ToString() + "%";
+                txtPositionUnrealizedPnLPercent.Text = Math.Round(Convert.ToDecimal(SymbolPosition.UnrealisedPnlPcnt * nudLeverage.Value * 100), 2).ToString() + "%";
 
                 if (SymbolPosition.OpenOrderBuyQty != 0 && SymbolPosition.OpenOrderBuyCost != 0 && SymbolPosition.OpenOrderBuyQty != null && SymbolPosition.OpenOrderBuyCost != null)
                 {
@@ -3873,10 +3873,10 @@ namespace BitmexSampleBotGoran
 
         private void AutoQuantityCheck()
         {
-            nudAutoQuantity.Value = ((nudPercentToTrade.Value / 100) * Balance) * Prices["XBTUSD"] * 5;
+            nudAutoQuantity.Value = ((nudPercentToTrade.Value / 100) * Balance) * Prices["XBTUSD"] * nudLeverage.Value;
             nudAutoQuantity.Value = Math.Round(nudAutoQuantity.Value);
 
-            nupQty.Value = ((nudPercentToTrade.Value / 100) * Balance) * Prices["XBTUSD"] * 5;
+            nupQty.Value = ((nudPercentToTrade.Value / 100) * Balance) * Prices["XBTUSD"] * nudLeverage.Value;
             nupQty.Value = Math.Round(nupQty.Value);
         }
 

@@ -187,6 +187,8 @@ namespace BitmexSampleBotGoran
         bool StopLossActivate = false;
         bool NotStopLoss = false;
 
+        int ActiveSym = 0;
+
         decimal? StopPriceCheck = null;
         decimal? PriceCheck = null;
         decimal? PositionPriceCheck = null;
@@ -225,7 +227,7 @@ namespace BitmexSampleBotGoran
 
         private void InitializeDropdownsAndSettings()
         {            
-            ddNetwork.SelectedIndex = 1;
+            ddNetwork.SelectedIndex = 0;
             ddOrderType.SelectedIndex = 1;
             ddlCandleTimes.SelectedIndex = 0;
             ddlAutoOrderType.SelectedIndex = 1;
@@ -326,10 +328,26 @@ namespace BitmexSampleBotGoran
             ActiveInstruments = bitmex.GetActiveInstruments().OrderByDescending(a => a.Volume24H).ToList();
             ddlSymbol.DataSource = ActiveInstruments;
             ddlSymbol.DisplayMember = "Symbol";
-            ddlSymbol.SelectedIndex = 0;
-            ActiveInstrument = ActiveInstruments[0];
 
-            
+            if (ActiveInstruments[0].Symbol == "XBTUSD")
+            {
+                ActiveSym = 0;
+            }
+            else if (ActiveInstruments[1].Symbol == "XBTUSD")
+            {
+                ActiveSym = 1;
+            }
+            else if (ActiveInstruments[2].Symbol == "XBTUSD")
+            {
+                ActiveSym = 2;
+            }
+            else if (ActiveInstruments[3].Symbol == "XBTUSD")
+            {
+                ActiveSym = 3;
+            }
+            ddlSymbol.SelectedIndex = ActiveSym;
+            ActiveInstrument = ActiveInstruments[ActiveSym];
+
 
             //foreach(Instrument i in ActiveInstruments)
             // {

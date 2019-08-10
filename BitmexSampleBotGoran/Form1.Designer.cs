@@ -152,10 +152,16 @@
             this.nudATRMultiplier = new System.Windows.Forms.NumericUpDown();
             this.nudATRPeriod = new System.Windows.Forms.NumericUpDown();
             this.groupBox10 = new System.Windows.Forms.GroupBox();
-            this.nupRSIDifferenceThree = new System.Windows.Forms.NumericUpDown();
-            this.label39 = new System.Windows.Forms.Label();
-            this.nudPriceChange = new System.Windows.Forms.NumericUpDown();
+            this.label42 = new System.Windows.Forms.Label();
+            this.label41 = new System.Windows.Forms.Label();
+            this.nudLongLimit = new System.Windows.Forms.NumericUpDown();
+            this.nudShortLimit = new System.Windows.Forms.NumericUpDown();
             this.label40 = new System.Windows.Forms.Label();
+            this.nudPriceChange = new System.Windows.Forms.NumericUpDown();
+            this.label39 = new System.Windows.Forms.Label();
+            this.nupRSIDifferenceThree = new System.Windows.Forms.NumericUpDown();
+            this.nudLeverage = new System.Windows.Forms.NumericUpDown();
+            this.label43 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nupQty)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCandles1d)).BeginInit();
@@ -184,8 +190,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudATRMultiplier)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudATRPeriod)).BeginInit();
             this.groupBox10.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifferenceThree)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLongLimit)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudShortLimit)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPriceChange)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifferenceThree)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLeverage)).BeginInit();
             this.SuspendLayout();
             // 
             // btnBuy
@@ -498,6 +507,8 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label43);
+            this.groupBox2.Controls.Add(this.nudLeverage);
             this.groupBox2.Controls.Add(this.chkManualControl);
             this.groupBox2.Controls.Add(this.label33);
             this.groupBox2.Controls.Add(this.ddlStrategyType);
@@ -1605,6 +1616,10 @@
             // 
             // groupBox10
             // 
+            this.groupBox10.Controls.Add(this.label42);
+            this.groupBox10.Controls.Add(this.label41);
+            this.groupBox10.Controls.Add(this.nudLongLimit);
+            this.groupBox10.Controls.Add(this.nudShortLimit);
             this.groupBox10.Controls.Add(this.label40);
             this.groupBox10.Controls.Add(this.nudPriceChange);
             this.groupBox10.Controls.Add(this.label39);
@@ -1616,36 +1631,88 @@
             this.groupBox10.TabStop = false;
             this.groupBox10.Text = "Strategy 3";
             // 
-            // nupRSIDifferenceThree
+            // label42
             // 
-            this.nupRSIDifferenceThree.Location = new System.Drawing.Point(6, 45);
-            this.nupRSIDifferenceThree.Maximum = new decimal(new int[] {
-            50,
+            this.label42.AutoSize = true;
+            this.label42.Location = new System.Drawing.Point(74, 69);
+            this.label42.Name = "label42";
+            this.label42.Size = new System.Drawing.Size(55, 13);
+            this.label42.TabIndex = 34;
+            this.label42.Text = "Long Limit";
+            // 
+            // label41
+            // 
+            this.label41.AutoSize = true;
+            this.label41.Location = new System.Drawing.Point(3, 69);
+            this.label41.Name = "label41";
+            this.label41.Size = new System.Drawing.Size(56, 13);
+            this.label41.TabIndex = 33;
+            this.label41.Text = "Short Limit";
+            // 
+            // nudLongLimit
+            // 
+            this.nudLongLimit.DecimalPlaces = 1;
+            this.nudLongLimit.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudLongLimit.Location = new System.Drawing.Point(77, 85);
+            this.nudLongLimit.Maximum = new decimal(new int[] {
+            1000000000,
             0,
             0,
             0});
-            this.nupRSIDifferenceThree.Minimum = new decimal(new int[] {
-            50,
+            this.nudLongLimit.Minimum = new decimal(new int[] {
+            5,
             0,
             0,
-            -2147483648});
-            this.nupRSIDifferenceThree.Name = "nupRSIDifferenceThree";
-            this.nupRSIDifferenceThree.Size = new System.Drawing.Size(60, 20);
-            this.nupRSIDifferenceThree.TabIndex = 27;
-            this.nupRSIDifferenceThree.Value = new decimal(new int[] {
-            7,
+            65536});
+            this.nudLongLimit.Name = "nudLongLimit";
+            this.nudLongLimit.Size = new System.Drawing.Size(60, 20);
+            this.nudLongLimit.TabIndex = 32;
+            this.nudLongLimit.Value = new decimal(new int[] {
+            7400,
             0,
             0,
-            -2147483648});
+            0});
             // 
-            // label39
+            // nudShortLimit
             // 
-            this.label39.AutoSize = true;
-            this.label39.Location = new System.Drawing.Point(72, 47);
-            this.label39.Name = "label39";
-            this.label39.Size = new System.Drawing.Size(69, 13);
-            this.label39.TabIndex = 28;
-            this.label39.Text = "RSI diff to 50";
+            this.nudShortLimit.DecimalPlaces = 1;
+            this.nudShortLimit.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudShortLimit.Location = new System.Drawing.Point(6, 85);
+            this.nudShortLimit.Maximum = new decimal(new int[] {
+            1000000000,
+            0,
+            0,
+            0});
+            this.nudShortLimit.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudShortLimit.Name = "nudShortLimit";
+            this.nudShortLimit.Size = new System.Drawing.Size(60, 20);
+            this.nudShortLimit.TabIndex = 31;
+            this.nudShortLimit.Value = new decimal(new int[] {
+            6500,
+            0,
+            0,
+            0});
+            // 
+            // label40
+            // 
+            this.label40.AutoSize = true;
+            this.label40.Location = new System.Drawing.Point(72, 21);
+            this.label40.Name = "label40";
+            this.label40.Size = new System.Drawing.Size(70, 13);
+            this.label40.TabIndex = 30;
+            this.label40.Text = "Price change";
             // 
             // nudPriceChange
             // 
@@ -1675,14 +1742,73 @@
             0,
             0});
             // 
-            // label40
+            // label39
             // 
-            this.label40.AutoSize = true;
-            this.label40.Location = new System.Drawing.Point(72, 21);
-            this.label40.Name = "label40";
-            this.label40.Size = new System.Drawing.Size(70, 13);
-            this.label40.TabIndex = 30;
-            this.label40.Text = "Price change";
+            this.label39.AutoSize = true;
+            this.label39.Location = new System.Drawing.Point(72, 47);
+            this.label39.Name = "label39";
+            this.label39.Size = new System.Drawing.Size(69, 13);
+            this.label39.TabIndex = 28;
+            this.label39.Text = "RSI diff to 50";
+            // 
+            // nupRSIDifferenceThree
+            // 
+            this.nupRSIDifferenceThree.Location = new System.Drawing.Point(6, 45);
+            this.nupRSIDifferenceThree.Maximum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.nupRSIDifferenceThree.Minimum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            -2147483648});
+            this.nupRSIDifferenceThree.Name = "nupRSIDifferenceThree";
+            this.nupRSIDifferenceThree.Size = new System.Drawing.Size(60, 20);
+            this.nupRSIDifferenceThree.TabIndex = 27;
+            this.nupRSIDifferenceThree.Value = new decimal(new int[] {
+            7,
+            0,
+            0,
+            -2147483648});
+            // 
+            // nudLeverage
+            // 
+            this.nudLeverage.DecimalPlaces = 2;
+            this.nudLeverage.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.nudLeverage.Location = new System.Drawing.Point(6, 178);
+            this.nudLeverage.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nudLeverage.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            131072});
+            this.nudLeverage.Name = "nudLeverage";
+            this.nudLeverage.Size = new System.Drawing.Size(60, 20);
+            this.nudLeverage.TabIndex = 27;
+            this.nudLeverage.Value = new decimal(new int[] {
+            500,
+            0,
+            0,
+            131072});
+            // 
+            // label43
+            // 
+            this.label43.AutoSize = true;
+            this.label43.Location = new System.Drawing.Point(72, 180);
+            this.label43.Name = "label43";
+            this.label43.Size = new System.Drawing.Size(52, 13);
+            this.label43.TabIndex = 33;
+            this.label43.Text = "Leverage";
             // 
             // Form1
             // 
@@ -1754,8 +1880,11 @@
             ((System.ComponentModel.ISupportInitialize)(this.nudATRPeriod)).EndInit();
             this.groupBox10.ResumeLayout(false);
             this.groupBox10.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifferenceThree)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLongLimit)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudShortLimit)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPriceChange)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nupRSIDifferenceThree)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudLeverage)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1889,6 +2018,12 @@
         private System.Windows.Forms.NumericUpDown nudPriceChange;
         private System.Windows.Forms.Label label39;
         private System.Windows.Forms.NumericUpDown nupRSIDifferenceThree;
+        private System.Windows.Forms.Label label42;
+        private System.Windows.Forms.Label label41;
+        private System.Windows.Forms.NumericUpDown nudLongLimit;
+        private System.Windows.Forms.NumericUpDown nudShortLimit;
+        private System.Windows.Forms.Label label43;
+        private System.Windows.Forms.NumericUpDown nudLeverage;
     }
 }
 
